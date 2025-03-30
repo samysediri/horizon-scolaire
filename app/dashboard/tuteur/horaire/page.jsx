@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
-import parse from 'date-fns/parse';
+import parse from ' 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import addMinutes from 'date-fns/addMinutes';
@@ -59,12 +59,12 @@ export default function DashboardTuteur() {
       const response = await fetch('/api/lessonspace/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `Séance ${newSeance.date} ${newSeance.heure}` }),
+        body: JSON.stringify({ name: `Seance_${newSeance.date}_${newSeance.heure}` }),
       });
 
       const data = await response.json();
       if (!response.ok) {
-        alert(`Erreur Lessonspace : ${JSON.stringify(data) || 'Réponse invalide'}`);
+        alert(`Erreur Lessonspace : ${response.status} - ${JSON.stringify(data) || 'Réponse invalide'}`);
         return;
       }
 
@@ -120,5 +120,3 @@ export default function DashboardTuteur() {
     </div>
   );
 }
-
-     
