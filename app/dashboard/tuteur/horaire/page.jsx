@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
-import parse from ' 'date-fns/parse';
+import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import addMinutes from 'date-fns/addMinutes';
@@ -112,7 +112,7 @@ export default function DashboardTuteur() {
           title: 'Séance',
           start: new Date(`${s.date}T${s.heure}`),
           end: addMinutes(new Date(`${s.date}T${s.heure}`), parseInt(s.duree))
-        }))}
+        })))
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
