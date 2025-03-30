@@ -112,7 +112,7 @@ export default function DashboardTuteur() {
           title: 'Séance',
           start: new Date(`${s.date}T${s.heure}`),
           end: addMinutes(new Date(`${s.date}T${s.heure}`), parseInt(s.duree))
-        })))
+        }))}
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
