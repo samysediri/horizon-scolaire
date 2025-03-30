@@ -64,7 +64,7 @@ export default function DashboardTuteur() {
 
       const data = await response.json();
       if (!response.ok) {
-        alert(`Erreur Lessonspace : ${data.error || 'Réponse invalide'}`);
+        alert(`Erreur Lessonspace : ${JSON.stringify(data) || 'Réponse invalide'}`);
         return;
       }
 
@@ -120,3 +120,5 @@ export default function DashboardTuteur() {
     </div>
   );
 }
+
+     
