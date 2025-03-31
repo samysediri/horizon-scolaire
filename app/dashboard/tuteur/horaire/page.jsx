@@ -104,7 +104,11 @@ export default function DashboardTuteur() {
     if (!dureeReelle || isNaN(dureeReelle)) return;
 
     await supabase.from('seances')
-      .update({ completee: true, duree_reelle: parseInt(dureeReelle) })
+      .update({
+        completee: true,
+        duree_reelle: parseInt(dureeReelle),
+        lien_revoir: selectedSeance.lien // Ajout du lien pour revoir
+      })
       .eq('id', selectedSeance.id);
 
     alert("Séance complétée!");
