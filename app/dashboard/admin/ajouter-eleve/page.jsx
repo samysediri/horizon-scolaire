@@ -1,4 +1,4 @@
-// Fichier : app/dashboard/admin/ajouter-eleve/page.js
+// Fichier : app/dashboard/admin/ajouter-eleve/page.jsx
 "use client";
 
 import { useState } from "react";
@@ -76,3 +76,4 @@ export default function AjouterEleve() {
     </div>
   );
 }
+
