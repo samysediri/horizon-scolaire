@@ -1,6 +1,7 @@
 // Fichier : /app/api/login/route.js
-import { createClient } from '@supabase/supabase-js'
+
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,9 +21,9 @@ export async function POST(req) {
       return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
-    return NextResponse.json({ session: data.session, user: data.user })
-  } catch (err) {
-    console.error('Erreur dans /api/login:', err)
+    return NextResponse.json({ user: data.user }, { status: 200 })
+  } catch (error) {
+    console.error('Erreur API /login :', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
