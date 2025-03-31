@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
@@ -80,7 +80,10 @@ export default function DashboardTuteur() {
         heure: newSeance.heure,
         duree: newSeance.duree,
         lien_lessonspace: lienLessonspace,
-        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
+        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
+        accedee: false,
+        lien_revoir: null,
+        completee: false
       });
 
       if (error) {
@@ -106,6 +109,25 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
+  const handleCompleterSeance = async () => {
+    const dureeReelle = prompt("Entrez la durée réelle (en minutes):");
+    if (!dureeReelle || isNaN(dureeReelle)) return;
+
+    await supabase.from('seances')
+      .update({ completee: true, duree_reelle: parseInt(dureeReelle) })
+      .eq('id', selectedSeance.id);
+
+    alert("Séance complétée!");
+    location.reload();
+  };
+
+  const handleAccederSeance = async () => {
+    if (!selectedSeance?.id) return;
+    await supabase.from('seances').update({ accedee: true }).eq('id', selectedSeance.id);
+    window.open(selectedSeance.lien, '_blank');
+    location.reload();
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Ajouter une séance</h1>
@@ -128,24 +150,36 @@ export default function DashboardTuteur() {
           title: 'Séance',
           start: new Date(`${s.date}T${s.heure}`),
           end: addMinutes(new Date(`${s.date}T${s.heure}`), parseInt(s.duree)),
-          lien: s.lien_lessonspace
+          lien: s.lien_lessonspace,
+          accedee: s.accedee,
+          lien_revoir: s.lien_revoir,
+          completee: s.completee
         }))}
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
         onSelectEvent={handleSelectEvent}
+        defaultView={Views.WEEK}
       />
 
       {selectedSeance && (
         <div className="mt-4 border p-4 rounded bg-gray-50">
           <h3 className="font-bold mb-2">Séance sélectionnée</h3>
           <div className="flex flex-wrap gap-2">
-            <a href={selectedSeance.lien} target="_blank" rel="noreferrer">
-              <button className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
-            </a>
-            <button className="bg-green-500 text-white px-3 py-1 rounded">Compléter</button>
-            <button onClick={handleDeleteSeance} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
-            <button className="bg-purple-500 text-white px-3 py-1 rounded">Revoir</button>
+            {!selectedSeance.completee && (
+              <>
+                <button onClick={handleAccederSeance} className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
+                {selectedSeance.accedee && (
+                  <button onClick={handleCompleterSeance} className="bg-green-500 text-white px-3 py-1 rounded">Compléter</button>
+                )}
+                <button onClick={handleDeleteSeance} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
+              </>
+            )}
+            {selectedSeance.accedee && selectedSeance.completee && selectedSeance.lien_revoir && (
+              <a href={selectedSeance.lien_revoir} target="_blank" rel="noreferrer">
+                <button className="bg-purple-500 text-white px-3 py-1 rounded">Revoir</button>
+              </a>
+            )}
           </div>
         </div>
       )}
