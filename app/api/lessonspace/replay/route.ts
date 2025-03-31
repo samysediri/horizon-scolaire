@@ -1,4 +1,4 @@
-// Fichier : app/api/lessonspace/replay/route.ts
+// Fichier : app/api/lessonspace/replay/route.js
 
 import { NextResponse } from 'next/server';
 
@@ -20,7 +20,6 @@ export async function POST(req) {
     });
 
     const text = await response.text();
-
     console.log('📦 Réponse brute de Lessonspace :', text);
 
     let data;
