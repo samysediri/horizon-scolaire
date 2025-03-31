@@ -57,21 +57,11 @@ export default function DashboardTuteur() {
     }
 
     try {
-      const response = await fetch('/api/lessonspace/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `Seance_${newSeance.date}_${newSeance.heure}` }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        alert(`Erreur Lessonspace : ${response.status} - ${JSON.stringify(data) || 'Réponse invalide'}`);
+      const eleve = eleves.find(e => e.id === selectedEleveId);
+      if (!eleve?.lien_lessonspace) {
+        alert("Le lien Lessonspace de l'élève est manquant. Ajoutez-le dans Supabase.");
         return;
       }
-
-      const lienLessonspace = data?.url || null;
-
-      const eleve = eleves.find(e => e.id === selectedEleveId);
 
       const { error } = await supabase.from('seances').insert({
         tuteur_id: userId,
@@ -79,7 +69,7 @@ export default function DashboardTuteur() {
         date: newSeance.date,
         heure: newSeance.heure,
         duree: newSeance.duree,
-        lien_lessonspace: lienLessonspace,
+        lien_lessonspace: eleve.lien_lessonspace,
         eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
         accedee: false,
         lien_revoir: null,
