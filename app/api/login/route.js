@@ -1,5 +1,3 @@
-// Fichier : /app/api/login/route.js
-
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -14,7 +12,7 @@ export async function POST(req) {
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     })
 
     if (error) {
