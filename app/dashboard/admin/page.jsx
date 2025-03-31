@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
+import Link from 'next/link';
 
 export default function AdminDashboard() {
   return (
@@ -8,7 +8,7 @@ export default function AdminDashboard() {
       <h1 className="text-3xl font-bold mb-6">Tableau de bord - Administrateur</h1>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-        <Link href="/dashboard/admin/ajouter-eleves">
+        <Link href="/dashboard/admin/ajouter-eleve">
           <div className="p-4 border rounded hover:bg-gray-100 cursor-pointer">
             <h2 className="text-xl font-semibold">Ajouter un élève</h2>
             <p className="text-sm text-gray-600">Créer une fiche élève et l’assigner à un tuteur.</p>
@@ -30,5 +30,5 @@ export default function AdminDashboard() {
         </Link>
       </div>
     </div>
-  )
+  );
 }
