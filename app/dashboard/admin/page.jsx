@@ -15,14 +15,14 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        <Link href="/dashboard/admin/eleves">
+        <Link href="/dashboard/admin/liste-eleves">
           <div className="p-4 border rounded hover:bg-gray-100 cursor-pointer">
             <h2 className="text-xl font-semibold">Voir tous les élèves</h2>
             <p className="text-sm text-gray-600">Consulter les fiches existantes pour les modifier ou supprimer.</p>
           </div>
         </Link>
 
-        <Link href="/dashboard/admin/tuteurs">
+        <Link href="/dashboard/admin/liste-tuteurs">
           <div className="p-4 border rounded hover:bg-gray-100 cursor-pointer">
             <h2 className="text-xl font-semibold">Voir tous les tuteurs</h2>
             <p className="text-sm text-gray-600">Lister les tuteurs et gérer leurs élèves.</p>
