@@ -26,6 +26,7 @@ export default function DashboardTuteur() {
   const [seances, setSeances] = useState([]);
   const [newSeance, setNewSeance] = useState({ date: '', heure: '', duree: '', recurrence: 1 });
   const [selectedEleveId, setSelectedEleveId] = useState('');
+  const [selectedSeance, setSelectedSeance] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +71,8 @@ export default function DashboardTuteur() {
 
       const lienLessonspace = data?.url || null;
 
+      const eleve = eleves.find(e => e.id === selectedEleveId);
+
       const { error } = await supabase.from('seances').insert({
         tuteur_id: userId,
         eleve_id: selectedEleveId,
@@ -77,6 +80,7 @@ export default function DashboardTuteur() {
         heure: newSeance.heure,
         duree: newSeance.duree,
         lien_lessonspace: lienLessonspace,
+        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
       });
 
       if (error) {
@@ -89,6 +93,17 @@ export default function DashboardTuteur() {
     } catch (err) {
       alert("Erreur inattendue : " + err.message);
     }
+  };
+
+  const handleSelectEvent = (event) => {
+    setSelectedSeance(event);
+  };
+
+  const handleDeleteSeance = async () => {
+    if (!selectedSeance?.id) return;
+    await supabase.from('seances').delete().eq('id', selectedSeance.id);
+    alert('Séance supprimée');
+    location.reload();
   };
 
   return (
@@ -109,14 +124,31 @@ export default function DashboardTuteur() {
       <Calendar
         localizer={localizer}
         events={seances.map(s => ({
+          id: s.id,
           title: 'Séance',
           start: new Date(`${s.date}T${s.heure}`),
-          end: addMinutes(new Date(`${s.date}T${s.heure}`), parseInt(s.duree))
+          end: addMinutes(new Date(`${s.date}T${s.heure}`), parseInt(s.duree)),
+          lien: s.lien_lessonspace
         }))}
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
+        onSelectEvent={handleSelectEvent}
       />
+
+      {selectedSeance && (
+        <div className="mt-4 border p-4 rounded bg-gray-50">
+          <h3 className="font-bold mb-2">Séance sélectionnée</h3>
+          <div className="flex flex-wrap gap-2">
+            <a href={selectedSeance.lien} target="_blank" rel="noreferrer">
+              <button className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
+            </a>
+            <button className="bg-green-500 text-white px-3 py-1 rounded">Compléter</button>
+            <button onClick={handleDeleteSeance} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
+            <button className="bg-purple-500 text-white px-3 py-1 rounded">Revoir</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
