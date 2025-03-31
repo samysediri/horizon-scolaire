@@ -1,4 +1,5 @@
 // Fichier : app/api/lessonspace/replay/route.js
+"use server";
 
 import { NextResponse } from 'next/server';
 
