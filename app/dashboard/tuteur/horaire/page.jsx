@@ -103,16 +103,32 @@ export default function DashboardTuteur() {
     const dureeReelle = prompt("Entrez la durée réelle (en minutes):");
     if (!dureeReelle || isNaN(dureeReelle)) return;
 
-    await supabase.from('seances')
-      .update({
-        completee: true,
-        duree_reelle: parseInt(dureeReelle),
-        lien_revoir: selectedSeance.lien // Ajout du lien pour revoir
-      })
-      .eq('id', selectedSeance.id);
+    try {
+      const response = await fetch('/api/lessonspace/replay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ space_id: selectedSeance.lien?.split('/').pop() })
+      });
 
-    alert("Séance complétée!");
-    location.reload();
+      const data = await response.json();
+      if (!response.ok || !data.replay_url) {
+        alert(`Erreur Lessonspace : ${response.status} - ${JSON.stringify(data)}`);
+        return;
+      }
+
+      await supabase.from('seances')
+        .update({
+          completee: true,
+          duree_reelle: parseInt(dureeReelle),
+          lien_revoir: data.replay_url
+        })
+        .eq('id', selectedSeance.id);
+
+      alert("Séance complétée avec enregistrement!");
+      location.reload();
+    } catch (err) {
+      alert("Erreur inattendue : " + err.message);
+    }
   };
 
   const handleAccederSeance = async () => {
