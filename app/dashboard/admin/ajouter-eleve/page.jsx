@@ -1,80 +1,78 @@
-'use client'
+// Fichier : app/dashboard/admin/ajouter-eleve/page.js
+"use client";
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
+);
 
 export default function AjouterEleve() {
-  const [form, setForm] = useState({
-    prenom: '',
-    nom: '',
-    email_eleve: '',
-    parent_email: '',
-    telephone_parent: '',
-    date_naissance: '',
-    besoins: '',
-    lien_lessonspace: '',
-    tuteur_id: ''
-  })
-  const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-        error
-      } = await supabase.auth.getUser()
-      if (error || !user) return
-      setForm((prev) => ({ ...prev, tuteur_id: user.id }))
-    }
-    fetchUser()
-  }, [])
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  const [form, setForm] = useState({ prenom: "", nom: "", lien_lessonspace: "" });
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const { error } = await supabase.from('eleves').insert([form])
-    if (error) {
-      console.error(error)
-      setMessage("Erreur : " + error.message)
-    } else {
-      setMessage('Élève ajouté avec succès!')
-      setForm({
-        prenom: '',
-        nom: '',
-        email_eleve: '',
-        parent_email: '',
-        telephone_parent: '',
-        date_naissance: '',
-        besoins: '',
-        lien_lessonspace: '',
-        tuteur_id: form.tuteur_id
-      })
+    e.preventDefault();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setMessage("Erreur : utilisateur non authentifié.");
+      return;
     }
-  }
+
+    const { error } = await supabase.from("eleves").insert({
+      prenom: form.prenom,
+      nom: form.nom,
+      lien_lessonspace: form.lien_lessonspace,
+      tuteur_id: user.id,
+    });
+
+    if (error) {
+      setMessage("Erreur Supabase : " + error.message);
+    } else {
+      setMessage("Élève ajouté avec succès!");
+      setForm({ prenom: "", nom: "", lien_lessonspace: "" });
+    }
+  };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Ajouter un élève</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="prenom" placeholder="Prénom" className="w-full p-2 border rounded" value={form.prenom} onChange={handleChange} required />
-        <input name="nom" placeholder="Nom" className="w-full p-2 border rounded" value={form.nom} onChange={handleChange} required />
-        <input name="email_eleve" type="email" placeholder="Courriel de l'élève" className="w-full p-2 border rounded" value={form.email_eleve} onChange={handleChange} required />
-        <input name="parent_email" type="email" placeholder="Courriel du parent" className="w-full p-2 border rounded" value={form.parent_email} onChange={handleChange} required />
-        <input name="telephone_parent" placeholder="Téléphone du parent" className="w-full p-2 border rounded" value={form.telephone_parent} onChange={handleChange} required />
-        <input name="date_naissance" type="date" className="w-full p-2 border rounded" value={form.date_naissance} onChange={handleChange} required />
-        <textarea name="besoins" placeholder="Besoins spécifiques" className="w-full p-2 border rounded" value={form.besoins} onChange={handleChange} />
-        <input name="lien_lessonspace" placeholder="Lien Lessonspace" className="w-full p-2 border rounded" value={form.lien_lessonspace} onChange={handleChange} />
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Ajouter</button>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Ajouter un élève</h1>
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+        <input
+          type="text"
+          placeholder="Prénom"
+          value={form.prenom}
+          onChange={(e) => setForm({ ...form, prenom: e.target.value })}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Nom"
+          value={form.nom}
+          onChange={(e) => setForm({ ...form, nom: e.target.value })}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <input
+          type="url"
+          placeholder="Lien Lessonspace"
+          value={form.lien_lessonspace}
+          onChange={(e) => setForm({ ...form, lien_lessonspace: e.target.value })}
+          className="w-full p-2 border rounded"
+          required
+        />
+        <button
+          type="submit"
+          className="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Ajouter
+        </button>
       </form>
-      {message && <p className="mt-4 text-center text-sm text-gray-700">{message}</p>}
+      {message && <p className="mt-4 text-sm text-gray-700">{message}</p>}
     </div>
-  )
+  );
 }
