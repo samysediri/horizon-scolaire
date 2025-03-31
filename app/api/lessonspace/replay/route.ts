@@ -11,7 +11,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing space_id' }, { status: 400 });
     }
 
-    const response = await fetch(`https://api.lessonspace.com/v1/spaces/${space_id}`, {
+    const response = await fetch(`https://api.thelessonspace.com/v1/spaces/${space_id}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${process.env.LESSONSPACE_API_KEY}`,
