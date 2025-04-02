@@ -1,26 +1,29 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
+import { createClient } from '@/utils/supabase/client'
 
 export default function Callback() {
-  const router = useRouter();
-  const supabase = createClientComponentClient();
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+  const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        const role = session.user.user_metadata.role;
-        if (role === 'admin') router.replace('/dashboard/admin');
-        else if (role === 'tuteur') router.replace('/dashboard/tuteur');
-        else if (role === 'parent') router.replace('/dashboard/parent');
-        else router.replace('/dashboard');
-      } else {
-        router.replace('/connexion');
-      }
-    });
-  }, []);
+    const url = new URL(window.location.href)
+    supabase.auth
+      .exchangeCodeForSession(url)
+      .then(() => {
+        window.location.href = '/dashboard/tuteur'
+      })
+      .catch((err) => {
+        console.error('Error exchanging code for session:', err)
+      })
+  }, [supabase])
 
-  return <p>Connexion en cours...</p>;
+  if (error) {
+    return <div>Erreur: {error}</div>
+  }
+
+  return <p>Connexion en cours...</p>
 }
