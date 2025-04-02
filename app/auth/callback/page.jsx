@@ -1,29 +1,12 @@
-'use client'
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
-import { useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
-import { createClient } from '../../../utils/supabase/client'
+const CallbackClient = dynamic(() => import('./CallbackClient'), { ssr: false });
 
-export default function Callback() {
-  const searchParams = useSearchParams()
-  const error = searchParams.get('error')
-  const supabase = createClient()
-
-  useEffect(() => {
-    const url = new URL(window.location.href)
-    supabase.auth
-      .exchangeCodeForSession(url)
-      .then(() => {
-        window.location.href = '/dashboard/tuteur'
-      })
-      .catch((err) => {
-        console.error('Error exchanging code for session:', err)
-      })
-  }, [supabase])
-
-  if (error) {
-    return <div>Erreur: {error}</div>
-  }
-
-  return <p>Connexion en cours...</p>
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Chargement...</p>}>
+      <CallbackClient />
+    </Suspense>
+  );
 }
