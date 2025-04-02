@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client.ts';
+import { createClient } from '@/utils/supabase/client';
 ;
 
 export default function CallbackPage() {
