@@ -14,23 +14,31 @@ export default function ConfirmPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const init = async () => {
+      const { data, error } = await supabase.auth.getSessionFromUrl()
+      if (error) console.error('Erreur récupération URL:', error.message)
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
       setSession(session)
       setLoading(false)
-    })
+    }
+
+    init()
   }, [supabase])
 
   const handleSetPassword = async () => {
     setError(null)
-    const { data, error } = await supabase.auth.updateUser({
+    const { error } = await supabase.auth.updateUser({
       password,
     })
 
     if (error) {
       setError(error.message)
     } else {
-      // Optionnel : tu peux fetcher le profil ici et router vers le bon dashboard
-      router.push('/dashboard/tuteur') // adapte selon ton routing
+      router.push('/dashboard/tuteur') // ou un autre chemin selon le rôle
     }
   }
 
