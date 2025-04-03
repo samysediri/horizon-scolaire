@@ -1,13 +1,27 @@
-// app/auth/confirm/page.tsx
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+'use client'
 
-const ConfirmClient = dynamic(() => import('./ConfirmClient'), { ssr: false })
+import { useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function Page() {
+export default function ConfirmPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = searchParams.get('token')
+    const type = searchParams.get('type')
+    
+    if (token && type === 'signup') {
+      // Redirige automatiquement au dashboard tuteur
+      router.push('/dashboard/tuteur')
+    } else {
+      // Sinon tu peux rediriger ailleurs ou afficher un message
+      router.push('/')
+    }
+  }, [searchParams, router])
+
   return (
-    <Suspense fallback={<div>Chargement...</div>}>
-      <ConfirmClient />
-    </Suspense>
+    <div>Confirmation en cours...</div>
   )
 }
