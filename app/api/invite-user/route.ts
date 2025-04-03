@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export async function POST(req) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { email, role, metadata } = body;
@@ -16,6 +16,7 @@ export async function POST(req) {
 
     console.log('[API] Envoi invitation à :', email);
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: 'https://horizon-scolaire.vercel.app/auth/confirm',
       data: {
         role,
         ...metadata
