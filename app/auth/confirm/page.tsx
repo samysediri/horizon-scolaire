@@ -14,31 +14,25 @@ export default function ConfirmPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const init = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
-        queryString: window.location.href,
-      })
-
+    const exchange = async () => {
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.hash)
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
+        setLoading(false)
+        return
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
+      const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setLoading(false)
     }
 
-    init()
-  }, [supabase])
+    exchange()
+  }, [])
 
   const handleSetPassword = async () => {
     setError(null)
-    const { error } = await supabase.auth.updateUser({
-      password,
-    })
+    const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
       setError(error.message)
@@ -48,10 +42,7 @@ export default function ConfirmPage() {
   }
 
   if (loading) return <p>Chargement...</p>
-
-  if (!session) {
-    return <p>Session invalide ou expirée. Essaie de recliquer sur le lien d’invitation.</p>
-  }
+  if (!session) return <p>Session invalide ou expirée. Essaie de recliquer sur le lien d’invitation.</p>
 
   return (
     <div style={{ maxWidth: 400, margin: '2rem auto', padding: '1rem' }}>
