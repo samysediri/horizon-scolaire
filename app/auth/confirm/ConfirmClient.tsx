@@ -1,7 +1,6 @@
 'use client'
 import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { useRouter } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function ConfirmClient() {
   const searchParams = useSearchParams()
@@ -10,8 +9,9 @@ export default function ConfirmClient() {
   useEffect(() => {
     const code = searchParams.get('code')
     const token = searchParams.get('access_token')
+
     if (code || token) {
-      router.push(`/dashboard/tuteur`)
+      router.push('/dashboard/tuteur')
     }
   }, [searchParams, router])
 
