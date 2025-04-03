@@ -14,30 +14,31 @@ export default function ConfirmPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const exchange = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.hash)
-      if (exchangeError) {
-        console.error('Erreur de session:', exchangeError.message)
-        setLoading(false)
-        return
-      }
+    const init = async () => {
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
+      if (exchangeError) console.error('Erreur de session:', exchangeError.message)
 
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+
+      if (sessionError) console.error('Erreur session:', sessionError.message)
+
       setSession(session)
       setLoading(false)
     }
 
-    exchange()
-  }, [])
+    init()
+  }, [supabase])
 
   const handleSetPassword = async () => {
     setError(null)
     const { error } = await supabase.auth.updateUser({ password })
-
     if (error) {
       setError(error.message)
     } else {
-      router.push('/dashboard/tuteur')
+      router.push('/dashboard/tuteur') // ou autre route
     }
   }
 
@@ -47,7 +48,7 @@ export default function ConfirmPage() {
   return (
     <div style={{ maxWidth: 400, margin: '2rem auto', padding: '1rem' }}>
       <h1>Bienvenue sur Horizon Scolaire</h1>
-      <p>Merci d’avoir accepté l’invitation. Choisis un mot de passe pour activer ton compte.</p>
+      <p>Choisis un mot de passe pour activer ton compte.</p>
 
       <input
         type="password"
