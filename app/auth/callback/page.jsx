@@ -1,7 +1,5 @@
-import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-
-const CallbackClient = dynamic(() => import('./CallbackClient'), { ssr: false });
+import CallbackClient from './CallbackClient';
 
 export default function Page() {
   return (
