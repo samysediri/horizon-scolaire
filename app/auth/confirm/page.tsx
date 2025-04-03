@@ -1,41 +1,66 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Session } from '@supabase/supabase-js'
 
 export default function ConfirmPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = createClientComponentClient()
+  const [session, setSession] = useState<Session | null>(null)
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setLoading(false)
+    })
+  }, [supabase])
 
-      if (!user) {
-        router.replace('/auth/login')
-        return
-      }
+  const handleSetPassword = async () => {
+    setError(null)
+    const { data, error } = await supabase.auth.updateUser({
+      password,
+    })
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (profile?.role === 'admin') {
-        router.replace('/dashboard/admin')
-      } else if (profile?.role === 'tuteur') {
-        router.replace('/dashboard/tuteur')
-      } else {
-        router.replace('/dashboard/eleve')
-      }
+    if (error) {
+      setError(error.message)
+    } else {
+      // Optionnel : tu peux fetcher le profil ici et router vers le bon dashboard
+      router.push('/dashboard/tuteur') // adapte selon ton routing
     }
+  }
 
-    checkUser()
-  }, [router, supabase])
+  if (loading) return <p>Chargement...</p>
 
-  return <p>Redirection...</p>
+  if (!session) {
+    return <p>Session invalide ou expirée. Essaie de recliquer sur le lien d’invitation.</p>
+  }
+
+  return (
+    <div style={{ maxWidth: 400, margin: '2rem auto', padding: '1rem' }}>
+      <h1>Bienvenue sur Horizon Scolaire</h1>
+      <p>Merci d’avoir accepté l’invitation. Choisis un mot de passe pour activer ton compte.</p>
+
+      <input
+        type="password"
+        placeholder="Nouveau mot de passe"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        style={{ width: '100%', padding: '0.5rem', marginTop: '1rem' }}
+      />
+
+      <button
+        onClick={handleSetPassword}
+        style={{ width: '100%', marginTop: '1rem', padding: '0.5rem' }}
+      >
+        Enregistrer mon mot de passe
+      </button>
+
+      {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
+    </div>
+  )
 }
