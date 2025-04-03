@@ -11,17 +11,13 @@ export default function ConfirmPage() {
   useEffect(() => {
     const token = searchParams.get('token')
     const type = searchParams.get('type')
-    
+
     if (token && type === 'signup') {
-      // Redirige automatiquement au dashboard tuteur
       router.push('/dashboard/tuteur')
     } else {
-      // Sinon tu peux rediriger ailleurs ou afficher un message
       router.push('/')
     }
   }, [searchParams, router])
 
-  return (
-    <div>Confirmation en cours...</div>
-  )
+  return <div>Confirmation en cours...</div>
 }
