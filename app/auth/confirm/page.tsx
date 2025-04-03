@@ -1,7 +1,13 @@
-'use client'
+// app/auth/confirm/page.tsx
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
 
-import ConfirmClient from './ConfirmClient'
+const ConfirmClient = dynamic(() => import('./ConfirmClient'), { ssr: false })
 
 export default function Page() {
-  return <ConfirmClient />
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <ConfirmClient />
+    </Suspense>
+  )
 }
