@@ -15,8 +15,13 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
-      if (exchangeError) console.error('Erreur de session:', exchangeError.message)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
+        queryString: window.location.href,
+      })
+
+      if (exchangeError) {
+        console.error('Erreur de session:', exchangeError.message)
+      }
 
       const {
         data: { session },
@@ -38,7 +43,7 @@ export default function ConfirmPage() {
     if (error) {
       setError(error.message)
     } else {
-      router.push('/dashboard/tuteur') // adapte au rôle si nécessaire
+      router.push('/dashboard/tuteur')
     }
   }
 
