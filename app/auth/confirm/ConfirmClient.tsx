@@ -9,7 +9,8 @@ export default function ConfirmClient() {
 
   useEffect(() => {
     const code = searchParams.get('code')
-    if (code) {
+    const token = searchParams.get('access_token')
+    if (code || token) {
       router.push(`/dashboard/tuteur`)
     }
   }, [searchParams, router])
