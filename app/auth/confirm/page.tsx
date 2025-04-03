@@ -1,33 +1,20 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export default function ConfirmPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const type = searchParams.get('type');
+  const router = useRouter();
 
   useEffect(() => {
-    const confirmUser = async () => {
-      if (!token || !type) return;
+    const code = searchParams.get('code');
 
-      const supabase = createClient();
-      const { error } = await supabase.auth.exchangeCodeForSession(token);
+    if (code) {
+      router.push(`/auth/callback?code=${code}`);
+    }
+  }, [searchParams, router]);
 
-      if (error) {
-        console.error('Error confirming user:', error);
-        return;
-      }
-
-      // Rediriger après confirmation
-      router.replace('/dashboard/tuteur');
-    };
-
-    confirmUser();
-  }, [token, type, router]);
-
-  return <p>Confirmation en cours...</p>;
+  return <p>Redirection en cours...</p>;
 }
