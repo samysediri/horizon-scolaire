@@ -1,19 +1,23 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
 export default function CallbackClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const code = searchParams.get('code');
-  const client = createClient();
 
   useEffect(() => {
+    const supabase = createClient();
+
     if (code) {
-      client.auth.exchangeCodeForSession(code);
+      supabase.auth.exchangeCodeForSession(code).then(() => {
+        router.push('/dashboard');
+      });
     }
   }, [code]);
 
-  return <div>Connexion en cours...</div>;
+  return <p>Connexion en cours...</p>;
 }
