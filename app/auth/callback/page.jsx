@@ -1,24 +1,12 @@
-'use client';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
-import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+const CallbackClient = dynamic(() => import('./CallbackClient'), { ssr: false });
 
-export default function Callback() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const code = searchParams.get('code');
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(() => {
-        router.push('/dashboard'); // Redirige vers /dashboard après login
-      });
-    }
-  }, [code, router]);
-
-  return <p>Connexion en cours...</p>;
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Chargement...</p>}>
+      <CallbackClient />
+    </Suspense>
+  );
 }
