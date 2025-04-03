@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
-export default function ConfirmPage() {
+export default function ConfirmClient() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -18,7 +18,7 @@ export default function ConfirmPage() {
         if (!error) {
           router.push('/dashboard/tuteur')
         } else {
-          console.error('Erreur de session Supabase :', error)
+          console.error('Erreur Supabase:', error)
         }
       }
     }
@@ -26,5 +26,5 @@ export default function ConfirmPage() {
     confirm()
   }, [searchParams, router])
 
-  return <p>Confirmation en cours...</p>
+  return <p>Confirmation de l'invitation en cours...</p>
 }
