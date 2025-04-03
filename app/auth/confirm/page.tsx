@@ -15,8 +15,8 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data, error } = await supabase.auth.getSessionFromUrl()
-      if (error) console.error('Erreur récupération URL:', error.message)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
+      if (exchangeError) console.error('Erreur de session:', exchangeError.message)
 
       const {
         data: { session },
@@ -38,7 +38,7 @@ export default function ConfirmPage() {
     if (error) {
       setError(error.message)
     } else {
-      router.push('/dashboard/tuteur') // ou un autre chemin selon le rôle
+      router.push('/dashboard/tuteur') // adapte au rôle si nécessaire
     }
   }
 
