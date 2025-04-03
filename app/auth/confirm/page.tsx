@@ -1,6 +1,10 @@
-'use client'
-import ConfirmClient from './ConfirmClient'
+import { Suspense } from 'react'
+import ConfirmWrapper from './ConfirmWrapper'
 
 export default function Page() {
-  return <ConfirmClient />
+  return (
+    <Suspense fallback={<div>Redirection...</div>}>
+      <ConfirmWrapper />
+    </Suspense>
+  )
 }
