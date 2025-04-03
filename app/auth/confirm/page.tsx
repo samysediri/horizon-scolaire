@@ -15,9 +15,7 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href,
-      })
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
       if (exchangeError) console.error('Erreur de session:', exchangeError.message)
 
       const {
