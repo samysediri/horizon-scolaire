@@ -5,29 +5,27 @@ import { createBrowserClient } from '@/lib/supabase/client'
 
 export default function ConfirmPage() {
   const [message, setMessage] = useState('Chargement...')
-  
+
   useEffect(() => {
-    const supabase = createBrowserClient()
-
     const run = async () => {
-      if (typeof window === 'undefined') return
+      const supabase = createBrowserClient()
 
-      const { error } = await supabase.auth.exchangeCodeForSession()
+      console.log('➡️ document.cookie =', document.cookie)
 
-      if (error) {
-        console.error('Erreur de session:', error.message)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
+
+      if (exchangeError) {
+        console.error('Erreur de session:', exchangeError.message)
         setMessage('Session invalide ou expirée.')
       } else {
-        setMessage('🎉 Ton compte a bien été activé!')
+        setMessage('Session établie! Redirection...')
+        // Redirige vers le tableau de bord ou autre page pertinente
+        window.location.href = '/dashboard'
       }
     }
 
     run()
   }, [])
 
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>{message}</h1>
-    </div>
-  )
+  return <p>{message}</p>
 }
