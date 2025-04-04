@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 export default function ConfirmPage() {
   const [message, setMessage] = useState('Chargement...')
-  const supabase = createBrowserSupabaseClient()
+  const supabase = createPagesBrowserClient()
 
   useEffect(() => {
     const run = async () => {
@@ -20,7 +20,6 @@ export default function ConfirmPage() {
         setMessage('Session invalide ou expirée.')
       } else {
         setMessage('Connexion réussie! Redirection...')
-        // Rediriger si tu veux :
         // window.location.href = '/'
       }
     }
@@ -30,4 +29,3 @@ export default function ConfirmPage() {
 
   return <p>{message}</p>
 }
-
