@@ -7,9 +7,8 @@ import { Session } from '@supabase/supabase-js'
 
 export default function ConfirmPage() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
   const searchParams = useSearchParams()
-
+  const supabase = createClientComponentClient()
   const [session, setSession] = useState<Session | null>(null)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(true)
@@ -17,7 +16,9 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const exchange = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
+        currentUrl: window.location.href,
+      })
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
         setError("Session invalide ou expirée.")
@@ -35,16 +36,19 @@ export default function ConfirmPage() {
 
   const handleSetPassword = async () => {
     setError(null)
-    const { data, error } = await supabase.auth.updateUser({ password })
+    const { data, error } = await supabase.auth.updateUser({
+      password,
+    })
 
     if (error) {
       setError(error.message)
     } else {
-      router.push('/dashboard/tuteur') // adapte selon le rôle
+      router.push('/dashboard/tuteur') // Ajuste si besoin
     }
   }
 
   if (loading) return <p>Chargement...</p>
+  if (error) return <p style={{ color: 'red' }}>{error}</p>
   if (!session) return <p>Session invalide ou expirée. Essaie de recliquer sur le lien d’invitation.</p>
 
   return (
