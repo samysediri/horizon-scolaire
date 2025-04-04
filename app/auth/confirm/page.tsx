@@ -10,7 +10,8 @@ export default function ConfirmPage() {
     const run = async () => {
       const supabase = createClient()
 
-      const { error } = await supabase.auth.exchangeCodeForSession()
+     const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+
 
       if (error) {
         console.error('Erreur de session:', error.message)
