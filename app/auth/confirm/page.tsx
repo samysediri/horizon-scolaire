@@ -1,41 +1,41 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/types/supabase'
-import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@/lib/supabase/client'
 
 export default function ConfirmPage() {
-  const router = useRouter()
+  const supabase = createBrowserClient()
   const [error, setError] = useState<string | null>(null)
-
-  const supabase = createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     const run = async () => {
       console.log('➡️ document.cookie =', document.cookie)
 
-     supabase.auth.exchangeCodeForSession(window.location.href)
-
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
 
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
         setError('Session invalide ou expirée.')
-        return
+      } else {
+        setSuccess(true)
       }
-
-      router.push('/dashboard/tuteur') // ou ton dashboard par défaut
     }
 
     run()
-  }, [])
+  }, [supabase])
 
-  if (error) {
-    return <p>{error}</p>
-  }
-
-  return <p>Connexion en cours...</p>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+      <div className="text-center">
+        {error ? (
+          <p className="text-red-500 font-semibold">{error}</p>
+        ) : success ? (
+          <p className="text-green-600 font-semibold">Ton compte est maintenant activé! 🎉</p>
+        ) : (
+          <p className="text-gray-600">Activation de ton compte en cours...</p>
+        )}
+      </div>
+    </div>
+  )
 }
