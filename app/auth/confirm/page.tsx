@@ -1,13 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Session } from '@supabase/supabase-js'
 
 export default function ConfirmPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
   const [session, setSession] = useState<Session | null>(null)
   const [password, setPassword] = useState('')
@@ -16,9 +15,8 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const exchange = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href,
-      })
+      const currentUrl = window.location.href
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(currentUrl)
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
         setError("Session invalide ou expirée.")
@@ -36,14 +34,14 @@ export default function ConfirmPage() {
 
   const handleSetPassword = async () => {
     setError(null)
-    const { data, error } = await supabase.auth.updateUser({
+    const { error } = await supabase.auth.updateUser({
       password,
     })
 
     if (error) {
       setError(error.message)
     } else {
-      router.push('/dashboard/tuteur') // Ajuste si besoin
+      router.push('/dashboard/tuteur') // ajuste au besoin
     }
   }
 
