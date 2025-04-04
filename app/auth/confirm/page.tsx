@@ -1,31 +1,29 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
 
 export default function ConfirmPage() {
   const [message, setMessage] = useState('Chargement...')
+  const supabase = createBrowserSupabaseClient()
 
   useEffect(() => {
     const run = async () => {
-      const supabase = createBrowserClient()
-
       console.log('➡️ document.cookie =', document.cookie)
 
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
+      const { error } = await supabase.auth.exchangeCodeForSession()
 
-      if (exchangeError) {
-        console.error('Erreur de session:', exchangeError.message)
+      if (error) {
+        console.error('Erreur de session:', error.message)
         setMessage('Session invalide ou expirée.')
       } else {
-        setMessage('Session établie! Redirection...')
-        // Redirige vers le tableau de bord ou autre page pertinente
-        window.location.href = '/dashboard'
+        setMessage('Connexion réussie! Redirection...')
+        // Tu peux aussi faire un `router.push('/')` ici si tu veux rediriger.
       }
     }
 
     run()
-  }, [])
+  }, [supabase])
 
   return <p>{message}</p>
 }
