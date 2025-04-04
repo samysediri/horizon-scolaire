@@ -9,7 +9,7 @@ export default function ConfirmPage() {
   useEffect(() => {
     const run = async () => {
       const supabase = createClient()
-      const { error } = await supabase.auth.exchangeCodeForSession({ currentUrl: window.location.href })
+      const { error } = await supabase.auth.exchangeCodeForSession()
 
       if (error) {
         console.error('Erreur de session:', error.message)
@@ -27,4 +27,3 @@ export default function ConfirmPage() {
 
   return <p>{message}</p>
 }
-
