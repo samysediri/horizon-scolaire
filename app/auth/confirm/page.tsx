@@ -18,8 +18,8 @@ export default function ConfirmPage() {
     const run = async () => {
       console.log('➡️ document.cookie =', document.cookie)
 
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href,
+     supabase.auth.exchangeCodeForSession(window.location.href)
+
       })
 
       if (exchangeError) {
