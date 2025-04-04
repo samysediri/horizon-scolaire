@@ -9,26 +9,22 @@ export default function ConfirmPage() {
   useEffect(() => {
     const run = async () => {
       const supabase = createClient()
-
-     const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
-
+      const { error } = await supabase.auth.exchangeCodeForSession({ currentUrl: window.location.href })
 
       if (error) {
         console.error('Erreur de session:', error.message)
         setMessage('Session invalide ou expirée.')
       } else {
         setMessage('Connexion réussie! Redirection...')
-        // redirection vers ton dashboard ou page d'accueil
-        window.location.href = '/dashboard'
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 2000)
       }
     }
 
     run()
   }, [])
 
-  return (
-    <div style={{ padding: 32 }}>
-      <h1>{message}</h1>
-    </div>
-  )
+  return <p>{message}</p>
 }
+
