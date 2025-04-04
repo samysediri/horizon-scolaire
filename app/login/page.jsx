@@ -1,56 +1,47 @@
+// app/login/page.tsx
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { createBrowserClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [status, setStatus] = useState('')
+  const supabase = createBrowserClient()
 
   const handleLogin = async () => {
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
-      })
+    setStatus('Envoi du lien...')
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+      },
+    })
 
-      const data = await res.json()
-      if (res.ok) {
-        router.push('/dashboard')
-      } else {
-        setError(data.error || 'Erreur de connexion')
-      }
-    } catch (err) {
-      setError('Erreur serveur')
+    if (error) {
+      setStatus(`Erreur: ${error.message}`)
+    } else {
+      setStatus('Lien magique envoyé! Vérifie tes courriels.')
     }
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 border rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Connexion</h1>
+    <div style={{ padding: 24 }}>
+      <h1>Connexion à Horizon Scolaire</h1>
+      <p>Entre ton courriel pour recevoir un lien magique :</p>
       <input
         type="email"
-        placeholder="Courriel"
         value={email}
-        onChange={e => setEmail(e.target.value)}
-        className="w-full mb-3 p-2 border rounded"
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="exemple@email.com"
+        style={{ padding: 8, fontSize: 16, width: 300 }}
       />
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        className="w-full mb-3 p-2 border rounded"
-      />
-      {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-      <button onClick={handleLogin} className="w-full bg-blue-600 text-white p-2 rounded">
-        Se connecter
-      </button>
-      <p className="text-sm text-blue-600 text-center mt-4">
-        <a href="/reset-password">Mot de passe oublié ?</a>
-      </p>
+      <div style={{ marginTop: 12 }}>
+        <button onClick={handleLogin} style={{ padding: '8px 16px', fontSize: 16 }}>
+          Envoyer le lien magique
+        </button>
+      </div>
+      {status && <p style={{ marginTop: 12 }}>{status}</p>}
     </div>
   )
 }
