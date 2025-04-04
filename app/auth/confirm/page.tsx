@@ -11,9 +11,7 @@ export default function ConfirmPage() {
     const run = async () => {
       console.log('➡️ document.cookie =', document.cookie)
 
-      const { error } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href,
-      })
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
 
       if (error) {
         console.error('Erreur de session:', error.message)
