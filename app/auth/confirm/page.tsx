@@ -13,7 +13,10 @@ export default function ConfirmPage() {
     const run = async () => {
       console.log('➡️ document.cookie =', document.cookie)
 
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
+  currentUrl: window.location.href,
+})
+
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
         setError('Session invalide ou expirée.')
