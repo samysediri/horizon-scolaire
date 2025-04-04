@@ -12,20 +12,22 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const run = async () => {
-      const fullUrl = window.location.href
-      const { error } = await supabase.auth.exchangeCodeForSession(fullUrl)
+      // Reconstruire l’URL complète avec le hash
+      const currentUrl = window.location.origin + window.location.pathname + window.location.hash
 
-      if (error) {
-        console.error('Erreur de session:', error.message)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(currentUrl)
+
+      if (exchangeError) {
+        console.error('Erreur de session:', exchangeError.message)
         setError('Erreur de session : lien invalide ou expiré.')
       }
 
       setLoading(false)
     }
 
-    // Attendre un peu pour s'assurer que window.location.href contient le hash
+    // Attendre un peu pour s’assurer que le hash est bien disponible
     setTimeout(run, 100)
-  }, [supabase])
+  }, [])
 
   if (loading) return <p>Chargement...</p>
   if (error) return <p style={{ color: 'red' }}>{error}</p>
@@ -34,7 +36,7 @@ export default function ConfirmPage() {
     <div>
       <h1>Compte confirmé</h1>
       <p>Tu peux maintenant accéder à ton espace.</p>
-      <button onClick={() => router.push('/dashboard/tuteur')}>Aller à mon tableau de bord</button>
+      <button onClick={() => router.push('/dashboard/tuteur')}>Aller au tableau de bord</button>
     </div>
   )
 }
