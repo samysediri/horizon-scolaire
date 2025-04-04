@@ -13,19 +13,21 @@ export default function ConfirmPage() {
   useEffect(() => {
     const run = async () => {
       console.log('➡️ document.cookie =', document.cookie)
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
-      
+
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
+        currentUrl: window.location.href,
+      })
+
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
         setError('Session invalide ou expirée.')
       } else {
-        router.push('/dashboard') // redirige vers ton dashboard après confirmation
+        router.push('/dashboard')
       }
 
       setLoading(false)
     }
 
-    // Exécute seulement dans le navigateur
     if (typeof window !== 'undefined') {
       run()
     }
