@@ -20,7 +20,6 @@ export default function ConfirmPage() {
 
      supabase.auth.exchangeCodeForSession(window.location.href)
 
-      })
 
       if (exchangeError) {
         console.error('Erreur de session:', exchangeError.message)
