@@ -2,12 +2,14 @@
 'use client'
 
 import { useState } from 'react'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('')
-  const supabase = createBrowserClient()
+  const supabase = createClient()
+
 
   const handleLogin = async () => {
     setStatus('Envoi du lien...')
