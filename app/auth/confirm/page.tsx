@@ -1,40 +1,33 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@/lib/supabase/client'
 
 export default function ConfirmPage() {
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
- const supabase = createClient()
-
+  const [message, setMessage] = useState('Chargement...')
+  
   useEffect(() => {
+    const supabase = createBrowserClient()
+
     const run = async () => {
-      console.log('➡️ document.cookie =', document.cookie)
+      if (typeof window === 'undefined') return
 
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href,
-      })
+      const { error } = await supabase.auth.exchangeCodeForSession()
 
-      if (exchangeError) {
-        console.error('Erreur de session:', exchangeError.message)
-        setError('Session invalide ou expirée.')
+      if (error) {
+        console.error('Erreur de session:', error.message)
+        setMessage('Session invalide ou expirée.')
       } else {
-        router.push('/dashboard')
+        setMessage('🎉 Ton compte a bien été activé!')
       }
-
-      setLoading(false)
     }
 
-    if (typeof window !== 'undefined') {
-      run()
-    }
+    run()
   }, [])
 
-  if (loading) return <p>Chargement...</p>
-  if (error) return <p style={{ color: 'red' }}>{error}</p>
-
-  return null
+  return (
+    <div style={{ padding: 24 }}>
+      <h1>{message}</h1>
+    </div>
+  )
 }
