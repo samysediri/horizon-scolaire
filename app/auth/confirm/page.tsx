@@ -1,41 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
+export default function ConfirmPage() {
   const router = useRouter()
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
+  useEffect(() => {
+    const run = async () => {
+      const supabase = createClient()
 
-    const supabase = createClient()
+      const { error } = await supabase.auth.exchangeCodeForSession({
+        currentUrl: window.location.href
+      })
 
-    const { error } = await supabase.auth.signInWithOtp({ email })
-
-    if (error) {
-      setMessage('Erreur : ' + error.message)
-    } else {
-      setMessage('Vérifie ton courriel pour le lien magique ✨')
+      if (error) {
+        console.error('Erreur de session:', error.message)
+      } else {
+        router.push('/dashboard') // ou vers la page que tu veux après connexion
+      }
     }
-  }
 
-  return (
-    <div>
-      <h1>Connexion</h1>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Adresse courriel"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <button type="submit">Envoyer un lien magique</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
-  )
+    run()
+  }, [router])
+
+  return <p>Connexion en cours...</p>
 }
