@@ -5,14 +5,12 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -23,27 +21,26 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message)
+      setMessage(`Erreur: ${error.message}`)
     } else {
-      setSuccess(true)
+      setMessage('Un lien magique a été envoyé à votre courriel.')
     }
   }
 
   return (
-    <div>
+    <div style={{ padding: '2rem' }}>
       <h1>Connexion</h1>
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          placeholder="Entrez votre courriel"
+          placeholder="Votre courriel"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Envoyer un lien magique</button>
+        <button type="submit">Se connecter</button>
       </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>Vérifie ta boîte courriel !</p>}
+      {message && <p>{message}</p>}
     </div>
   )
 }
