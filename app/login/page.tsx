@@ -1,4 +1,3 @@
-// app/login/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -6,15 +5,12 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage('')
     const supabase = createClient()
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -29,26 +25,22 @@ export default function LoginPage() {
     } else {
       setMessage('Un lien magique a été envoyé à votre adresse courriel.')
     }
-    setLoading(false)
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
+    <div style={{ padding: '2rem' }}>
       <h1>Connexion</h1>
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          placeholder="Adresse courriel"
+          placeholder="Votre courriel"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ width: '100%', padding: 8, marginBottom: 10 }}
         />
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 10 }}>
-          {loading ? 'Envoi...' : 'Envoyer un lien magique'}
-        </button>
+        <button type="submit">Se connecter</button>
       </form>
-      {message && <p style={{ marginTop: 15 }}>{message}</p>}
+      {message && <p>{message}</p>}
     </div>
   )
 }
