@@ -6,24 +6,21 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function ConfirmPage() {
   const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
     const run = async () => {
-      const supabase = createClient()
-
-      const { error } = await supabase.auth.exchangeCodeForSession(
-        window.location.href
-      )
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
 
       if (error) {
         console.error('Erreur de session:', error.message)
       } else {
-        router.push('/')
+        router.push('/') // Redirige vers la page d’accueil ou dashboard
       }
     }
 
     run()
-  }, [router])
+  }, [supabase, router])
 
   return <p>Connexion en cours...</p>
 }
