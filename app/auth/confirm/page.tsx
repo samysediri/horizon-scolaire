@@ -16,13 +16,16 @@ export default function ConfirmPage() {
       if (error) {
         console.error('Erreur de session:', error.message)
       } else {
-        router.push('/dashboard') // ou la page où tu veux rediriger
+        router.push('/dashboard') // Redirige si tout est bon
       }
     }
 
     run()
   }, [router])
 
-  return <p>Connexion en cours...</p>
+  return (
+    <div className="p-4">
+      <h1 className="text-xl">Connexion...</h1>
+    </div>
+  )
 }
-
