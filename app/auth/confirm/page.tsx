@@ -10,12 +10,11 @@ export default function ConfirmPage() {
   useEffect(() => {
     const run = async () => {
       const supabase = createBrowserClient()
-
       const { error } = await supabase.auth.exchangeCodeForSession()
       if (error) {
         console.error('Erreur de session:', error.message)
       } else {
-        router.push('/dashboard') // ou la route de ton choix
+        router.push('/dashboard')
       }
     }
 
