@@ -11,14 +11,12 @@ export default function ConfirmPage() {
     const run = async () => {
       const supabase = createClient()
 
-      const { error } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href
-      })
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
 
       if (error) {
         console.error('Erreur de session:', error.message)
       } else {
-        router.push('/dashboard') // ou vers la page que tu veux après connexion
+        router.push('/dashboard/tuteur')
       }
     }
 
