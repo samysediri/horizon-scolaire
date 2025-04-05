@@ -1,31 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function TestPage() {
-  const [message, setMessage] = useState('Loading...')
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    supabase
-      .from('profiles') // ou une table que tu sais exister dans ta DB
-      .select('*')
-      .limit(1)
-      .then(({ data, error }) => {
-        if (error) {
-          setMessage('❌ Erreur: ' + error.message)
-        } else {
-          setMessage('✅ Connexion Supabase réussie!')
-        }
-      })
-  }, [])
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Test Supabase</h1>
-      <p>{message}</p>
+    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+      <h1>🔧 Page de test Supabase</h1>
+      <p><strong>Supabase URL :</strong> {supabaseUrl || '❌ non défini'}</p>
+      <p><strong>Supabase Anon Key :</strong> {supabaseAnonKey ? '✅ défini' : '❌ non défini'}</p>
     </div>
   )
 }
