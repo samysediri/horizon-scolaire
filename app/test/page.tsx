@@ -24,3 +24,5 @@ export default function TestClientEnv() {
     </div>
   )
 }
+
+export const dynamic = 'force-dynamic';
