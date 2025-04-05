@@ -1,3 +1,4 @@
+// app/login/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -5,45 +6,49 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(true)
+    setMessage('')
+    const supabase = createClient()
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+      },
+    })
+
     if (error) {
-      setError(error.message)
+      setMessage(error.message)
     } else {
-      router.push('/dashboard') // ou la route que tu veux
+      setMessage('Un lien magique a été envoyé à votre adresse courriel.')
     }
+    setLoading(false)
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
       <h1>Connexion</h1>
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          placeholder="Courriel"
+          placeholder="Adresse courriel"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
+          style={{ width: '100%', padding: 8, marginBottom: 10 }}
         />
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Se connecter</button>
+        <button type="submit" disabled={loading} style={{ width: '100%', padding: 10 }}>
+          {loading ? 'Envoi...' : 'Envoyer un lien magique'}
+        </button>
       </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {message && <p style={{ marginTop: 15 }}>{message}</p>}
     </div>
   )
 }
