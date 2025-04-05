@@ -1,37 +1,30 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@/lib/supabase/client'
 
 export default function ConfirmPage() {
-  const [message, setMessage] = useState('Chargement...')
+  const router = useRouter()
 
   useEffect(() => {
     const run = async () => {
-      const supabase = createClient()
+      const supabase = createBrowserClient()
 
-      const { error } = await supabase.auth.exchangeCodeForSession({
-        currentUrl: window.location.href,
-      })
-
+      const { error } = await supabase.auth.exchangeCodeForSession()
       if (error) {
         console.error('Erreur de session:', error.message)
-        setMessage('Session invalide ou expirée.')
-        return
+      } else {
+        router.push('/dashboard') // ou la route de ton choix
       }
-
-      setMessage('Connexion réussie! Redirection...')
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 2000)
     }
 
     run()
-  }, [])
+  }, [router])
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-xl font-bold">{message}</h1>
-    </div>
+    <main className="p-4">
+      <h1 className="text-xl font-bold">Confirmation en cours…</h1>
+    </main>
   )
 }
