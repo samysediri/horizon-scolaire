@@ -10,18 +10,21 @@ export default function ConfirmPage() {
   useEffect(() => {
     const run = async () => {
       const supabase = createClient()
-
       const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
 
       if (error) {
         console.error('Erreur de session:', error.message)
       } else {
-        router.push('/dashboard/tuteur')
+        router.push('/dashboard') // ou ta page d’accueil après login
       }
     }
 
     run()
   }, [router])
 
-  return <p>Connexion en cours...</p>
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <p>Connexion en cours...</p>
+    </div>
+  )
 }
