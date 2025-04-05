@@ -1,46 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect } from 'react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [message, setMessage] = useState('')
-  const router = useRouter()
+  useEffect(() => {
+    alert('✅ La page de login se charge bien côté client');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const supabase = createClient()
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    })
-
-    if (error) {
-      setMessage(error.message)
-    } else {
-      setMessage('Un lien magique a été envoyé à votre adresse courriel.')
-    }
-  }
+    alert('🔍 NEXT_PUBLIC_SUPABASE_URL: ' + process.env.NEXT_PUBLIC_SUPABASE_URL);
+    alert('🔍 NEXT_PUBLIC_SUPABASE_ANON_KEY: ' + process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  }, []);
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>Connexion</h1>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Votre courriel"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button type="submit">Se connecter</button>
-      </form>
-      {message && <p>{message}</p>}
+      <h1>Page de connexion</h1>
+      <p>Si vous voyez les alertes, c’est que la page fonctionne côté client.</p>
     </div>
   )
 }
