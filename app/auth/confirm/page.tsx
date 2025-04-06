@@ -1,5 +1,3 @@
-// app/auth/confirm/page.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -13,13 +11,13 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const confirm = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession()
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
       if (error) {
         setMessage('Erreur de connexion. Lien invalide ou expiré.')
         console.error(error)
       } else {
         setMessage('Connexion réussie! Redirection en cours...')
-        setTimeout(() => router.push('/dashboard'), 2000) // change ça si t’as une autre page d’arrivée
+        setTimeout(() => router.push('/dashboard/tuteur'), 2000) // change ça selon ton besoin
       }
     }
 
