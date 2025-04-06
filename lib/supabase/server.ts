@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export const createClient = () => {
-  const cookieStore = cookies()
+  const cookieStore = cookies() // 👈 PAS de await ici
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,10 +13,10 @@ export const createClient = () => {
           return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options: any) {
-          // optionnel — Supabase ne l’utilise pas dans tous les cas
+          // Optionnel
         },
         remove(name: string, options: any) {
-          // optionnel — même chose ici
+          // Optionnel
         },
       },
     }
