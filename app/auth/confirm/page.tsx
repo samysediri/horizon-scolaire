@@ -1,31 +1,34 @@
+// app/auth/confirm/page.tsx
+
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function ConfirmPage() {
+  const [message, setMessage] = useState('Vérification en cours...')
   const router = useRouter()
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const run = async () => {
-      const supabase = createClient()
-
-      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
-
+    const confirm = async () => {
+      const { error } = await supabase.auth.exchangeCodeForSession()
       if (error) {
-        console.error('Erreur de session:', error.message)
+        setMessage('Erreur de connexion. Lien invalide ou expiré.')
+        console.error(error)
       } else {
-        router.push('/dashboard') // Redirige si tout est bon
+        setMessage('Connexion réussie! Redirection en cours...')
+        setTimeout(() => router.push('/dashboard'), 2000) // change ça si t’as une autre page d’arrivée
       }
     }
 
-    run()
-  }, [router])
+    confirm()
+  }, [])
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl">Connexion...</h1>
-    </div>
+    <main style={{ padding: '2rem' }}>
+      <h1>{message}</h1>
+    </main>
   )
 }
