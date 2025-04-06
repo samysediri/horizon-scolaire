@@ -1,12 +1,24 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export function createClient() {
+export const createClient = () => {
+  const cookieStore = cookies()
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: cookies()  // <-- ici c’est un objet, pas une fonction
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          // optionnel — Supabase ne l’utilise pas dans tous les cas
+        },
+        remove(name: string, options: any) {
+          // optionnel — même chose ici
+        },
+      },
     }
   )
 }
