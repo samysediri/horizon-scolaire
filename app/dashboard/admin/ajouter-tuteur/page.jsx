@@ -1,58 +1,61 @@
-'use client';
+// app/dashboard/admin/ajouter-tuteur/page.jsx
 
-import { useState } from 'react';
+'use client'
 
-export default function AjouterTuteur() {
-  const [form, setForm] = useState({
-    prenom: '',
-    nom: '',
-    email: ''
-  });
+import { useState } from 'react'
 
-  const [message, setMessage] = useState('');
+export default function AjouterTuteurPage() {
+  const [email, setEmail] = useState('')
+  const [nom, setNom] = useState('')
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleSubmit = async () => {
+    setMessage('')
+    setError('')
+    setLoading(true)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage("Envoi de l'invitation en cours...");
-
-    const response = await fetch('/api/invite-user', {
+    const res = await fetch('/api/invite-user', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        email: form.email,
-        role: 'tuteur',
-        metadata: {
-          prenom: form.prenom,
-          nom: form.nom
-        }
-      })
-    });
+      body: JSON.stringify({ email, nom, role: 'tuteur' })
+    })
 
-    const result = await response.json();
+    const data = await res.json()
+    setLoading(false)
 
-    if (response.ok) {
-      setMessage('✅ Invitation envoyée avec succès.');
+    if (!res.ok) {
+      setError(data.error || 'Erreur lors de l\'envoi de l\'invitation.')
     } else {
-      setMessage('❌ Erreur : ' + (result.error || 'Impossible d’envoyer l’invitation.'));
+      setMessage("L'invitation a été envoyée avec succès !")
+      setEmail('')
+      setNom('')
     }
-  };
+  }
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Ajouter un tuteur</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input type="text" name="prenom" placeholder="Prénom" onChange={handleChange} className="w-full border p-2 rounded" required />
-        <input type="text" name="nom" placeholder="Nom" onChange={handleChange} className="w-full border p-2 rounded" required />
-        <input type="email" name="email" placeholder="Courriel" onChange={handleChange} className="w-full border p-2 rounded" required />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Envoyer l'invitation</button>
-      </form>
-      {message && <p className="mt-4 text-center">{message}</p>}
+    <div>
+      <h1>Ajouter un tuteur</h1>
+      <input
+        type="text"
+        placeholder="Nom du tuteur"
+        value={nom}
+        onChange={(e) => setNom(e.target.value)}
+      />
+      <input
+        type="email"
+        placeholder="Adresse courriel"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button onClick={handleSubmit} disabled={loading}>
+        {loading ? 'Envoi en cours...' : 'Envoyer une invitation'}
+      </button>
+      {message && <p style={{ color: 'green' }}>{message}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
-  );
+  )
 }
