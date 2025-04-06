@@ -1,10 +1,8 @@
-// lib/supabase/server.ts
-
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export const createClient = () => {
-  const cookieStore = cookies() // ✅ PAS async
+export const createClient = async () => {
+  const cookieStore = await cookies() // <-- ici on attend la promesse
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,15 +10,16 @@ export const createClient = () => {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value
+          const cookie = cookieStore.get(name)
+          return cookie?.value
         },
         set() {
-          // Optionnel – nécessaire seulement si tu modifies les cookies
+          // Optionnel – seulement nécessaire si tu veux modifier les cookies côté serveur
         },
         remove() {
-          // Optionnel – nécessaire seulement si tu supprimes les cookies
-        },
-      },
+          // Optionnel aussi
+        }
+      }
     }
   )
 }
