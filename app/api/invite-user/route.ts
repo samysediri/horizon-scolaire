@@ -1,37 +1,30 @@
-import { createClient } from '@supabase/supabase-js';
+// app/api/invite-user/route.ts
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
+  const { email, nom, role } = await req.json()
+
+  if (!email || !role) {
+    return NextResponse.json({ error: 'Courriel et rôle requis.' }, { status: 400 })
+  }
+
+  const supabase = createClient()
+
   try {
-    const body = await req.json();
-    const { email, role, metadata } = body;
-
-    if (!email || !role) {
-      return new Response(JSON.stringify({ error: 'Email ou rôle manquant' }), { status: 400 });
-    }
-
-    console.log('[API] Envoi invitation à :', email);
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: 'https://horizon-scolaire.vercel.app/auth/confirm',
-      data: {
-        role,
-        ...metadata
-      }
-    });
+      data: { role, nom },
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/inscription`
+    })
 
     if (error) {
-      console.error('[API] Erreur Supabase:', error.message);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log('[API] Invitation envoyée avec succès.');
-    return new Response(JSON.stringify({ message: 'Invitation envoyée', data }), { status: 200 });
-  } catch (err) {
-    console.error('[API] Exception:', err.message);
-    return new Response(JSON.stringify({ error: 'Erreur serveur : ' + err.message }), { status: 500 });
+    return NextResponse.json({ message: 'Invitation envoyée avec succès', data })
+  } catch (e) {
+    console.error('Erreur lors de l’envoi de l’invitation:', e)
+    return NextResponse.json({ error: 'Une erreur est survenue.' }, { status: 500 })
   }
 }
