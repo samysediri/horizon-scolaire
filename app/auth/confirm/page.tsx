@@ -1,39 +1,40 @@
+// app/auth/confirm/page.tsx
 'use client'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
+import { useEffect, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
 
-export default function AuthConfirmPage() {
+export default function ConfirmPage() {
+  const [message, setMessage] = useState('Connexion en cours...')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
-  const [message, setMessage] = useState("Confirmation en cours...")
 
   useEffect(() => {
     const confirm = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+      const code = searchParams.get('code')
+      const type = searchParams.get('type')
+
+      if (!code || !type) {
+        setMessage('Paramètres manquants dans l’URL.')
+        return
+      }
+
+      const { error } = await supabase.auth.exchangeCodeForSession({ code })
 
       if (error) {
-        setMessage("Erreur de connexion. Lien invalide ou expiré.")
+        setMessage('Erreur de connexion. Lien invalide ou expiré.')
         console.error(error)
-      } else {
-        const { data: { user } } = await supabase.auth.getUser()
-        const role = user?.user_metadata?.role
-
-        if (role === "admin") router.push("/dashboard/admin")
-        else if (role === "tuteur") router.push("/dashboard/tuteur")
-        else if (role === "eleve") router.push("/dashboard/eleve")
-        else router.push("/dashboard")
+        return
       }
+
+      setMessage('Connexion réussie ! Redirection...')
+      router.push('/dashboard/tuteur') // ou vers la page de ton choix
     }
 
     confirm()
-  }, [router, supabase])
+  }, [searchParams])
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Confirmation du compte</h1>
-      <p>{message}</p>
-    </div>
-  )
+  return <div>{message}</div>
 }
