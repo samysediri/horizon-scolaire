@@ -1,14 +1,13 @@
-// app/auth/confirm/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 export default function ConfirmPage() {
-  const [message, setMessage] = useState('Connexion en cours...')
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [message, setMessage] = useState('Confirmation en cours...')
   const supabase = createClient()
 
   useEffect(() => {
@@ -17,24 +16,29 @@ export default function ConfirmPage() {
       const type = searchParams.get('type')
 
       if (!code || !type) {
-        setMessage('Paramètres manquants dans l’URL.')
+        setMessage('Lien invalide ou manquant.')
         return
       }
 
       const { error } = await supabase.auth.exchangeCodeForSession({ code })
 
       if (error) {
-        setMessage('Erreur de connexion. Lien invalide ou expiré.')
         console.error(error)
+        setMessage('Erreur de connexion. Lien invalide ou expiré.')
         return
       }
 
       setMessage('Connexion réussie ! Redirection...')
-      router.push('/dashboard/tuteur') // ou vers la page de ton choix
+      router.push('/dashboard/tuteur') // change selon le rôle
     }
 
     confirm()
   }, [searchParams])
 
-  return <div>{message}</div>
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Confirmation du compte</h1>
+      <p>{message}</p>
+    </div>
+  )
 }
