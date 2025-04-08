@@ -1,45 +1,50 @@
-'use client'
+// app/auth/confirm/page.tsx
+"use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { useEffect, useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { createClient } from "@/utils/supabase/client"
 
-export default function ConfirmPage() {
+export default function AuthConfirmPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const [message, setMessage] = useState('Confirmation en cours...')
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const [message, setMessage] = useState("Confirmation en cours...")
 
   useEffect(() => {
     const confirm = async () => {
-      const code = searchParams.get('code')
-      const type = searchParams.get('type')
+      const code = searchParams.get("token") || searchParams.get("code")
 
-      if (!code || !type) {
-        setMessage('Lien invalide ou manquant.')
+      if (!code) {
+        setMessage("Lien invalide.")
         return
       }
 
       const { error } = await supabase.auth.exchangeCodeForSession(code)
 
-
       if (error) {
         console.error(error)
-        setMessage('Erreur de connexion. Lien invalide ou expiré.')
-        return
-      }
+        setMessage("Erreur de connexion. Lien invalide ou expiré.")
+      } else {
+        const { data: { user } } = await supabase.auth.getUser()
+        const role = user?.user_metadata?.role
 
-      setMessage('Connexion réussie ! Redirection...')
-      router.push('/dashboard/tuteur') // change selon le rôle
+        if (role === "admin") router.push("/dashboard/admin")
+        else if (role === "tuteur") router.push("/dashboard/tuteur")
+        else if (role === "eleve") router.push("/dashboard/eleve")
+        else router.push("/dashboard")
+      }
     }
 
     confirm()
-  }, [searchParams])
+  }, [searchParams, router, supabase])
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Confirmation du compte</h1>
-      <p>{message}</p>
-    </div>
+    <Suspense fallback={<p>Chargement...</p>}>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold">Confirmation du compte</h1>
+        <p>{message}</p>
+      </div>
+    </Suspense>
   )
 }
