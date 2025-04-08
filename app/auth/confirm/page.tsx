@@ -1,5 +1,5 @@
 import ConfirmClient from "./ConfirmClient"
 
-export default function ConfirmPage() {
+export default function Page() {
   return <ConfirmClient />
 }
