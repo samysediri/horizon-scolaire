@@ -15,24 +15,29 @@ export default function ConfirmClient() {
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.replace("#", ""));
     const access_token = params.get("access_token");
+    const refresh_token = params.get("refresh_token");
     const type = params.get("type");
 
-    if (!access_token) {
+    if (!access_token || !refresh_token) {
       setError("Lien invalide ou expiré.");
       setLoading(false);
       return;
     }
 
     const confirmUser = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession(access_token);
+      const { error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+
       if (error) {
         setError(error.message);
         setLoading(false);
         return;
       }
 
-      if (type === "signup" || type === "invite") {
-        router.push("/creer-mot-de-passe");
+      if (type === "invite") {
+        router.push("/creer-mot-de-passe"); // tu peux rediriger vers la page pour définir le mot de passe
       } else {
         router.push("/dashboard");
       }
