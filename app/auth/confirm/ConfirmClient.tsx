@@ -1,66 +1,55 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Session } from '@supabase/supabase-js'
+import { useEffect, useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { createClient } from "@/utils/supabase/client"
 
-export default function ConfirmClient() {
+function InnerConfirm() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
-  const [session, setSession] = useState<Session | null>(null)
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const supabase = createClient()
+  const searchParams = useSearchParams()
+  const [message, setMessage] = useState("Confirmation en cours...")
 
   useEffect(() => {
-    const init = async () => {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(window.location.href)
-      if (exchangeError) {
-        setError('Session invalide ou expirée. Essaie de recliquer sur le lien d’invitation.')
-        setLoading(false)
+    const confirm = async () => {
+      const code = searchParams.get("token") || searchParams.get("code")
+
+      if (!code) {
+        setMessage("Lien invalide.")
         return
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setLoading(false)
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+      if (error) {
+        console.error(error)
+        setMessage("Erreur de connexion. Lien invalide ou expiré.")
+      } else {
+        const { data: { user } } = await supabase.auth.getUser()
+        const role = user?.user_metadata?.role
+
+        if (role === "admin") router.push("/dashboard/admin")
+        else if (role === "tuteur") router.push("/dashboard/tuteur")
+        else if (role === "eleve") router.push("/dashboard/eleve")
+        else router.push("/dashboard")
+      }
     }
 
-    init()
-  }, [])
-
-  const handleSetPassword = async () => {
-    setError(null)
-    const { error } = await supabase.auth.updateUser({ password })
-    if (error) {
-      setError(error.message)
-    } else {
-      router.push('/dashboard/tuteur')
-    }
-  }
-
-  if (loading) return <p>Chargement...</p>
-
-  if (!session) return <p>Session invalide ou expirée.</p>
+    confirm()
+  }, [searchParams, router, supabase])
 
   return (
-    <div style={{ maxWidth: 400, margin: '2rem auto', padding: '1rem' }}>
-      <h1>Bienvenue sur Horizon Scolaire</h1>
-      <p>Choisis un mot de passe pour activer ton compte.</p>
-
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ width: '100%', padding: '0.5rem', marginTop: '1rem' }}
-      />
-      <button onClick={handleSetPassword} style={{ width: '100%', marginTop: '1rem', padding: '0.5rem' }}>
-        Enregistrer
-      </button>
-
-      {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Confirmation du compte</h1>
+      <p>{message}</p>
     </div>
+  )
+}
+
+export default function ConfirmClient() {
+  return (
+    <Suspense fallback={<p>Chargement...</p>}>
+      <InnerConfirm />
+    </Suspense>
   )
 }
