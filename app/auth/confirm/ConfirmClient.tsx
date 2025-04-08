@@ -1,33 +1,42 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 
 export default function ConfirmClient() {
-  const router = useRouter()
-  const [message, setMessage] = useState("Confirmation en cours...")
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createPagesBrowserClient();
+  const token = searchParams.get("access_token");
+  const type = searchParams.get("type");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const hash = window.location.hash
-    const tokenMatch = hash.match(/access_token=([^&]*)/)
-    const token = tokenMatch?.[1]
+    if (!token || !type) return;
 
-    if (!token) {
-      setMessage("Lien invalide.")
-      return
-    }
+    const handleConfirmation = async () => {
+      const { error } = await supabase.auth.exchangeCodeForSession(token);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
 
-    setMessage("Votre compte a été confirmé. Redirection...")
+      if (type === "signup") {
+        router.push("/creer-mot-de-passe");
+      } else {
+        router.push("/dashboard");
+      }
+    };
 
-    setTimeout(() => {
-      router.push("/dashboard") // tu peux changer vers /login ou / selon ton besoin
-    }, 3000)
-  }, [router])
+    handleConfirmation();
+  }, [token, type]);
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Confirmation du compte</h1>
-      <p>{message}</p>
-    </div>
-  )
+  if (loading) return <p>Confirmation du compte...</p>;
+  if (error) return <p>Erreur : {error}</p>;
+
+  return null;
 }
