@@ -1,0 +1,42 @@
+---
+File: app/globals.css
+---
+
+/* Simple global styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f9f9f9;
+  color: #222;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+---
+File: components/SessionProvider.tsx
+---
+
+'use client'
+
+import { SessionContextProvider } from '@supabase/auth-helpers-react'
+import { useState } from 'react'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
+import { type SupabaseClient } from '@supabase/auth-helpers-nextjs'
+
+export default function SupabaseSessionProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [supabaseClient] = useState(() => createPagesBrowserClient())
+
+  return (
+    <SessionContextProvider supabaseClient={supabaseClient}>
+      {children}
+    </SessionContextProvider>
+  )
+}
