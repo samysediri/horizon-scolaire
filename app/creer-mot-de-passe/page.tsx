@@ -1,78 +1,81 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { useEffect, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
-export default function CreerMotDePasse() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function CreatePasswordClient() {
+  const [supabaseClient] = useState(() => createPagesBrowserClient())
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
-  const supabase = createPagesBrowserClient();
-  const router = useRouter();
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [message, setMessage] = useState('')
+  const [sessionRestored, setSessionRestored] = useState(false)
+
+  useEffect(() => {
+    const code = searchParams.get('access_token')
+    if (!code) {
+      setMessage('Lien invalide.')
+      return
+    }
+
+    // Restaurer la session avant de pouvoir changer le mot de passe
+    supabaseClient.auth
+      .exchangeCodeForSession(code)
+      .then(({ error }) => {
+        if (error) {
+          console.error(error)
+          setMessage('Erreur : lien invalide ou expiré.')
+        } else {
+          setSessionRestored(true)
+        }
+      })
+  }, [supabaseClient, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    setMessage('')
 
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
-      return;
+      setMessage('Les mots de passe ne correspondent pas.')
+      return
     }
 
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
-
-    setLoading(false);
-
+    const { error } = await supabaseClient.auth.updateUser({ password })
     if (error) {
-      setError(error.message);
+      setMessage('Erreur : ' + error.message)
     } else {
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
+      setMessage('Mot de passe créé avec succès. Redirection...')
+      setTimeout(() => router.push('/dashboard'), 1500)
     }
-  };
+  }
+
+  if (!sessionRestored) {
+    return <p>Chargement de la session...</p>
+  }
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Créer un mot de passe</h1>
-
-      {error && <p style={{ color: "red" }}>Erreur : {error}</p>}
-      {success && <p style={{ color: "green" }}>Mot de passe mis à jour! Redirection...</p>}
-
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Nouveau mot de passe</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div style={{ marginTop: "1rem" }}>
-          <label>Confirme le mot de passe</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit" style={{ marginTop: "1rem" }} disabled={loading}>
-          {loading ? "Enregistrement..." : "Créer mot de passe"}
-        </button>
-      </form>
-    </div>
-  );
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>Nouveau mot de passe</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+      <div>
+        <label>Confirme le mot de passe</label>
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+      </div>
+      <button type="submit">Créer mot de passe</button>
+      {message && <p style={{ color: 'red' }}>{message}</p>}
+    </form>
+  )
 }
