@@ -12,8 +12,13 @@ export default function CreatePasswordClient() {
 
   useEffect(() => {
     const restoreSession = async () => {
+      const code = searchParams.get('code')
+      if (!code) {
+        setErrorMsg("Lien invalide ou manquant.")
+        return
+      }
       try {
-        const { error } = await supabase.auth.exchangeCodeForSession()
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           console.error(error)
           setErrorMsg('Erreur lors de l\'échange du code.')
@@ -27,7 +32,7 @@ export default function CreatePasswordClient() {
     }
 
     restoreSession()
-  }, [supabase, router])
+  }, [supabase, router, searchParams])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
