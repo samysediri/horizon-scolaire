@@ -36,15 +36,18 @@ export default function ConfirmClient() {
         return;
       }
 
-      if (type === "invite") {
-        router.push("/creer-mot-de-passe"); // tu peux rediriger vers la page pour définir le mot de passe
-      } else {
-        router.push("/dashboard");
-      }
+      // Attendre que le cookie soit bien écrit
+      setTimeout(() => {
+        if (type === "invite") {
+          router.push("/creer-mot-de-passe");
+        } else {
+          router.push("/dashboard");
+        }
+      }, 800); // 800 ms pour être safe
     };
 
     confirmUser();
-  }, []);
+  }, [supabase, router]);
 
   if (loading) return <p>Confirmation du compte...</p>;
   if (error) return <p>Erreur : {error}</p>;
