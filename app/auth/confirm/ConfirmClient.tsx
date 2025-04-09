@@ -38,11 +38,15 @@ export default function ConfirmClient() {
 
       // Attendre que le cookie soit bien écrit
       setTimeout(() => {
-        if (type === "invite") {
-          router.push("/creer-mot-de-passe");
-        } else {
-          router.push("/dashboard");
-        }
+       const { data: userData } = await supabase.auth.getUser();
+const hasPassword = userData?.user?.user_metadata?.password_created;
+
+if (!hasPassword && type === "invite") {
+  router.push("/creer-mot-de-passe");
+} else {
+  router.push("/dashboard");
+}
+
       }, 800); // 800 ms pour être safe
     };
 
