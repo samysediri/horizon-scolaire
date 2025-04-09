@@ -1,66 +1,41 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 export default function CreatePasswordClient() {
-  const [supabase] = useState(() => createPagesBrowserClient())
-  const [sessionLoaded, setSessionLoaded] = useState(false)
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [errorMsg, setErrorMsg] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [supabase] = useState(() => createPagesBrowserClient())
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const { error } = await supabase.auth.exchangeCodeForSession({})
-
+        const { error } = await supabase.auth.exchangeCodeForSession()
         if (error) {
           console.error(error)
           setErrorMsg('Erreur lors de l\'échange du code.')
-          return
+        } else {
+          router.push('/dashboard/tuteur')
         }
-        setSessionLoaded(true)
       } catch (err) {
         console.error(err)
-        setErrorMsg('Erreur inattendue.')
+        setErrorMsg('Une erreur est survenue lors de la connexion.')
       }
     }
 
     restoreSession()
-  }, [supabase])
-
-  const handleSubmit = async () => {
-    setErrorMsg('')
-
-    if (!password || password !== confirmPassword) {
-      setErrorMsg('Les mots de passe ne correspondent pas.')
-      return
-    }
-
-    const { error } = await supabase.auth.updateUser({ password })
-    if (error) {
-      setErrorMsg('Erreur : ' + error.message)
-    } else {
-      router.push('/dashboard') // tu peux rediriger ailleurs
-    }
-  }
-
-  if (!sessionLoaded) return <p>Chargement de la session…</p>
+  }, [supabase, router])
 
   return (
-    <div>
-      <h1>Créer un mot de passe</h1>
-      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
-      <label>Nouveau mot de passe</label>
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-      <br />
-      <label>Confirmez le mot de passe</label>
-      <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-      <br />
-      <button onClick={handleSubmit}>Créer le mot de passe</button>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      {errorMsg ? (
+        <p className="text-red-500">{errorMsg}</p>
+      ) : (
+        <p>Création du mot de passe en cours...</p>
+      )}
     </div>
   )
 }
