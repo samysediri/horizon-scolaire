@@ -1,32 +1,43 @@
 'use client'
+
 import { useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
-export default function UpdatePassword() {
-  const [error, setError] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const searchParams = useSearchParams()
-  const access_token = searchParams.get('access_token')
-  const supabase = createPagesBrowserClient()
-
-  const handleUpdate = async () => {
-    if (password !== confirmPassword) return setError('Les mots de passe ne correspondent pas.')
-
-    const { error } = await supabase.auth.updateUser({ password })
-    if (error) return setError('Erreur : ' + error.message)
-
-    window.location.href = '/dashboard'
-  }
-
+export default function UpdatePasswordPage() {
   return (
-    <div>
-      <h1>Réinitialisation du mot de passe</h1>
-      <input type='password' placeholder='Nouveau mot de passe' value={password} onChange={(e) => setPassword(e.target.value)} />
-      <input type='password' placeholder='Confirmer' value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-      <button onClick={handleUpdate}>Mettre à jour</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </div>
+    <Suspense fallback={<p>Chargement...</p>}>
+      <UpdatePasswordClient />
+    </Suspense>
   )
+}
+
+function UpdatePasswordClient() {
+  const supabase = createPagesBrowserClient()
+  const searchParams = useSearchParams()
+  const [message, setMessage] = useState('Mise à jour du mot de passe...')
+
+  useEffect(() => {
+    const updatePassword = async () => {
+      const accessToken = searchParams.get('access_token')
+      if (!accessToken) {
+        setMessage("Lien invalide.")
+        return
+      }
+
+      const { data, error } = await supabase.auth.getUser(accessToken)
+      if (error || !data?.user) {
+        setMessage("Lien expiré ou utilisateur introuvable.")
+        return
+      }
+
+      // Redirection vers une interface de création de mot de passe personnalisée ?
+      // Ou juste un message de confirmation ?
+      setMessage("Utilisateur authentifié. Vous pouvez maintenant définir un nouveau mot de passe.")
+    }
+
+    updatePassword()
+  }, [searchParams, supabase])
+
+  return <p>{message}</p>
 }
