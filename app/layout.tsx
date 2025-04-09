@@ -1,24 +1,28 @@
-// app/layout.tsx
-'use client'
+// ✅ app/layout.tsx
+// ATTENTION : NE PAS METTRE "use client" DANS CE FICHIER
+import './globals.css'
+import { Inter } from 'next/font/google'
+import { SessionProvider } from '@/components/SessionProvider'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
-import { SessionContextProvider } from '@supabase/auth-helpers-react'
-import { useState } from 'react'
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Horizon Scolaire',
   description: 'Plateforme de tutorat en ligne',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [supabaseClient] = useState(() => createPagesBrowserClient())
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createServerComponentClient({ cookies })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
   return (
     <html lang="fr">
-      <body style={{ margin: 0, padding: 0, fontFamily: 'sans-serif' }}>
-        <SessionContextProvider supabaseClient={supabaseClient}>
-          {children}
-        </SessionContextProvider>
+      <body className={inter.className}>
+        <SessionProvider session={session}>{children}</SessionProvider>
       </body>
     </html>
   )
