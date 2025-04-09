@@ -1,5 +1,6 @@
+// app/layout.tsx
 import './globals.css'
-import SupabaseSessionProvider from '@/components/SessionProvider'
+import { Providers } from './providers'
 import { ReactNode } from 'react'
 
 export const metadata = {
@@ -11,9 +12,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <body>
-        <SupabaseSessionProvider>
-          {children}
-        </SupabaseSessionProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
