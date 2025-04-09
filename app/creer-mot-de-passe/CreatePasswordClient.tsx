@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 export default function CreatePasswordClient() {
@@ -10,24 +10,22 @@ export default function CreatePasswordClient() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-  const searchParams = useSearchParams()
   const router = useRouter()
 
   useEffect(() => {
     const restoreSession = async () => {
-      const hash = window.location.hash
-      if (!hash.includes('access_token')) {
-        setErrorMsg('Lien invalide ou expiré.')
-        return
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession()
+        if (error) {
+          console.error(error)
+          setErrorMsg('Erreur lors de l\'échange du code.')
+          return
+        }
+        setSessionLoaded(true)
+      } catch (err) {
+        console.error(err)
+        setErrorMsg('Erreur inattendue.')
       }
-
-      const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true })
-      if (error || !data.session) {
-        setErrorMsg('Échec de la récupération de la session.')
-        return
-      }
-
-      setSessionLoaded(true)
     }
 
     restoreSession()
@@ -45,7 +43,7 @@ export default function CreatePasswordClient() {
     if (error) {
       setErrorMsg('Erreur : ' + error.message)
     } else {
-      router.push('/dashboard') // ou n'importe quelle autre page après succès
+      router.push('/dashboard') // tu peux rediriger ailleurs
     }
   }
 
