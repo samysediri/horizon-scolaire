@@ -1,64 +1,32 @@
-// app/update-password/page.tsx
-
 'use client'
+import { useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-
-export default function UpdatePasswordPage() {
-  const supabase = createClient()
-  const router = useRouter()
-
+export default function UpdatePassword() {
+  const [error, setError] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const searchParams = useSearchParams()
+  const access_token = searchParams.get('access_token')
+  const supabase = createPagesBrowserClient()
 
-  const handleUpdatePassword = async () => {
-    setError('')
-    setMessage('')
+  const handleUpdate = async () => {
+    if (password !== confirmPassword) return setError('Les mots de passe ne correspondent pas.')
 
-    if (!password || !confirmPassword) {
-      setError('Veuillez remplir les deux champs.')
-      return
-    }
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) return setError('Erreur : ' + error.message)
 
-    if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.')
-      return
-    }
-
-    const { error } = await supabase.auth.updateUser({
-      password
-    })
-
-    if (error) {
-      setError('Erreur lors de la mise à jour du mot de passe.')
-    } else {
-      setMessage('Mot de passe mis à jour avec succès. Redirection en cours...')
-      setTimeout(() => router.push('/login'), 3000)
-    }
+    window.location.href = '/dashboard'
   }
 
   return (
     <div>
       <h1>Réinitialisation du mot de passe</h1>
-      <input
-        type="password"
-        placeholder="Nouveau mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Confirmer le mot de passe"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-      />
+      <input type='password' placeholder='Nouveau mot de passe' value={password} onChange={(e) => setPassword(e.target.value)} />
+      <input type='password' placeholder='Confirmer' value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+      <button onClick={handleUpdate}>Mettre à jour</button>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      <button onClick={handleUpdatePassword}>Mettre à jour le mot de passe</button>
     </div>
   )
 }
