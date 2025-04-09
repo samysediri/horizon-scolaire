@@ -15,7 +15,8 @@ export default function CreatePasswordClient() {
   useEffect(() => {
     const restoreSession = async () => {
       try {
-        const { error } = await supabase.auth.exchangeCodeForSession()
+        const { error } = await supabase.auth.exchangeCodeForSession({})
+
         if (error) {
           console.error(error)
           setErrorMsg('Erreur lors de l\'échange du code.')
