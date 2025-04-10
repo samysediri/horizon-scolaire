@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function AjouterTuteur() {
   const supabase = createClient()
@@ -12,42 +12,34 @@ export default function AjouterTuteur() {
   const [email, setEmail] = useState('')
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
-  const [allowed, setAllowed] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [authorized, setAuthorized] = useState<boolean | null>(null)
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
       if (!user) {
-        setError('Utilisateur non connecté')
-        setLoading(false)
+        setAuthorized(false)
         return
       }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .maybeSingle()
+        .single()
 
-      if (profileError || !profile) {
-        setError("Impossible de récupérer le profil.")
-        setLoading(false)
-        return
+      if (error || !profile || profile.role !== 'admin') {
+        setAuthorized(false)
+      } else {
+        setAuthorized(true)
       }
-
-      if (profile.role !== 'admin') {
-        setError('User not allowed')
-        setLoading(false)
-        return
-      }
-
-      setAllowed(true)
-      setLoading(false)
     }
 
-    checkAdmin()
-  }, [])
+    checkAuth()
+  }, [supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,8 +48,14 @@ export default function AjouterTuteur() {
 
     const res = await fetch('/api/invite-user', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, email, role: 'tuteur' }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nom,
+        email,
+        role: 'tuteur',
+      }),
     })
 
     const data = await res.json()
@@ -71,8 +69,8 @@ export default function AjouterTuteur() {
     }
   }
 
-  if (loading) return <p className="p-4">Chargement...</p>
-  if (!allowed) return <p className="p-4 text-red-600">{error}</p>
+  if (authorized === null) return <p>Vérification en cours...</p>
+  if (authorized === false) return <p>Utilisateur non autorisé</p>
 
   return (
     <div className="p-8 max-w-xl mx-auto">
