@@ -1,25 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
+// lib/supabase/server.ts
+
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
-export const createClient = async () => {
-  const cookieStore = await cookies() // <-- ici on attend la promesse
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          const cookie = cookieStore.get(name)
-          return cookie?.value
-        },
-        set() {
-          // Optionnel – seulement nécessaire si tu veux modifier les cookies côté serveur
-        },
-        remove() {
-          // Optionnel aussi
-        }
-      }
-    }
-  )
+export const createClient = () => {
+  return createServerComponentClient({ cookies })
 }
