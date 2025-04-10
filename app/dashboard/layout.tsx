@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
@@ -7,8 +6,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  // ✅ Pas besoin de passer de cookieStore
+  const supabase = createClient()
 
   const {
     data: { session },
@@ -18,24 +17,23 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // On va chercher le rôle dans la table profiles
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', session.user.id)
     .single()
 
-  if (error || !profile?.role) {
-    console.error('Aucun rôle trouvé, redirection vers login.')
+  const role = profile?.role
+
+  if (error || !role) {
+    console.error('Rôle introuvable pour cet utilisateur')
     redirect('/login')
   }
 
-  // Si l'utilisateur est à /dashboard, on redirige vers son dashboard spécifique
-  const currentPath = cookieStore.get('next-url')?.value || ''
-  const isAtRootDashboard = currentPath === '/dashboard'
-
-  if (isAtRootDashboard) {
-    redirect(`/dashboard/${profile.role}`)
+  // Si l'utilisateur tente d'accéder à /dashboard (racine), on le redirige vers son tableau de bord selon son rôle
+  const pathname = new URL(process.env.NEXT_PUBLIC_SITE_URL || '').pathname
+  if (pathname === '/dashboard') {
+    redirect(`/dashboard/${role}`)
   }
 
   return (
