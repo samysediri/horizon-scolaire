@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 export default function DashboardRedirect() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const router = useRouter()
   const supabase = createPagesBrowserClient()
 
   useEffect(() => {
@@ -16,6 +16,8 @@ export default function DashboardRedirect() {
         data: { user },
         error: userError
       } = await supabase.auth.getUser()
+
+      console.log('USER:', user)
 
       if (userError || !user) {
         setError('Utilisateur non authentifié')
@@ -36,7 +38,6 @@ export default function DashboardRedirect() {
       }
 
       const role = profile.role
-
       if (role === 'tuteur') router.push('/dashboard/tuteur')
       else if (role === 'eleve') router.push('/dashboard/eleve')
       else if (role === 'parent') router.push('/dashboard/parent')
@@ -55,3 +56,4 @@ export default function DashboardRedirect() {
 
   return null
 }
+
