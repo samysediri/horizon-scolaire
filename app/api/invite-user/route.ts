@@ -1,43 +1,47 @@
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+// app/api/invite-user/route.ts
+import { NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase/server'
 
-export async function POST(request: Request) {
-  const supabase = createServerActionClient({ cookies });
-  const { email, nom, role } = await request.json();
+export async function POST(req: Request) {
+  const supabase = createServerClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-  if (!email || !role || !nom) {
-    return NextResponse.json({ error: "Champs requis manquants." }, { status: 400 });
+  if (userError) {
+    console.error('Erreur récupération user:', userError)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  try {
-    // Créer l'utilisateur invité
-    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email);
+  console.log('USER:', user)
 
-    if (inviteError) {
-      return NextResponse.json({ error: inviteError.message }, { status: 500 });
-    }
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
-    const userId = inviteData.user?.id;
-
-    if (!userId) {
-      return NextResponse.json({ error: "ID utilisateur introuvable après l'invitation." }, { status: 500 });
-    }
-
-    // Ajouter à la table profiles
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: userId,
-      email,
-      nom,
-      role,
-    });
-
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
+  if (profileError || !profile || profile.role !== 'admin') {
+    console.error('Permission refusée ou erreur profile:', profileError)
+    return NextResponse.json({ error: 'User not allowed' }, { status: 403 })
   }
+
+  const body = await req.json()
+  const { email, name } = body
+
+  if (!email || !name) {
+    return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
+  }
+
+  const inviteRes = await supabase.auth.admin.inviteUser({
+    email,
+    options: {
+      data: { full_name: name, role: 'tutor' }
+    }
+  })
+
+  if (inviteRes.error) {
+    console.error('Erreur invitation:', inviteRes.error)
+    return NextResponse.json({ error: inviteRes.error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }
