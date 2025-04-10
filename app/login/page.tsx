@@ -1,14 +1,12 @@
-// app/login/page.tsx
-
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 
 export default function LoginPage() {
-  const supabase = createClient()
   const router = useRouter()
+  const supabase = useSupabaseClient()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,12 +15,8 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setError('')
 
-    if (!email) {
-      setError('Veuillez entrer votre adresse courriel.')
-      return
-    }
-    if (!password) {
-      setError('Veuillez entrer votre mot de passe.')
+    if (!email || !password) {
+      setError("Veuillez entrer votre adresse courriel et votre mot de passe.")
       return
     }
 
@@ -32,7 +26,7 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError('Invalid login credentials')
+      setError("Informations incorrectes")
     } else {
       router.push('/dashboard')
     }
@@ -53,7 +47,7 @@ export default function LoginPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      {error && <p>{error}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <button onClick={handleLogin}>Se connecter</button>
       <button onClick={() => router.push('/reset-password')}>Mot de passe oublié ?</button>
     </div>
