@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setError('')
-
+console.log('Tentative de connexion avec:', email, password) // 👈 ajoute ça
     if (!email || !password) {
       setError("Veuillez entrer votre adresse courriel et votre mot de passe.")
       return
@@ -24,7 +24,7 @@ export default function LoginPage() {
       email,
       password
     })
-
+console.log('Résultat connexion:', error) // 👈 et ça
     if (error) {
       setError("Informations incorrectes")
     } else {
