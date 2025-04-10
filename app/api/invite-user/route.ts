@@ -36,10 +36,8 @@ export async function POST(req: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-  // 👉 LOG POUR TESTER SI LA CLÉ EST PRÉSENTE
-  console.log('SUPABASE_SERVICE_ROLE_KEY =', serviceRoleKey)
-
   if (!serviceRoleKey || !supabaseUrl) {
+    console.error('Clés d\'API manquantes:', { serviceRoleKey, supabaseUrl })
     return NextResponse.json({ error: 'Clés d\'API manquantes' }, { status: 500 })
   }
 
