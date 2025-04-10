@@ -1,12 +1,12 @@
-// lib/supabase/server.ts
 'use server'
 
-import { createClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function createServerClient() {
   const cookieStore = cookies()
-  return createClient(
+
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
