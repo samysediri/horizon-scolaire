@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import './globals.css'
 import SupabaseProvider from '@/components/SupabaseProvider'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
