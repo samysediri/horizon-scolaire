@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export async function createServerClient(): Promise<SupabaseClient> {
-  const cookieStore = cookies()
+  const cookieStore = await cookies() // 👈 CORRECTION ici
 
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
