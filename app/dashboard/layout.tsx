@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/server'
 import SupabaseProvider from '@/components/SupabaseProvider'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
-import './globals.css'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const supabase = createClient() // ✅ PAS de await ici
