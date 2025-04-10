@@ -36,6 +36,9 @@ export default function AjouterTuteur() {
         .single()
 
       if (error || !profile) {
+        console.error('Erreur profil :', error)
+console.log('ID user :', user.id)
+
         setAuthorized(false)
         setRoleMessage('Impossible de récupérer le profil utilisateur.')
         return
