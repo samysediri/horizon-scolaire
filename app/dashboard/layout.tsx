@@ -1,12 +1,13 @@
-// app/dashboard/layout.tsx
-
+import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import SupabaseProvider from '@/components/SupabaseProvider'
-import { cookies } from 'next/headers'
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies()
-  const supabase = createClient()
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode
+}) {
+  const supabase = await createClient()
 
   const {
     data: { session },
