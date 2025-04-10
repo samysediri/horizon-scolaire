@@ -14,8 +14,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  console.log('USER:', user)
-
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
@@ -34,17 +32,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
-  const inviteRes = await supabase.auth.admin.inviteUser({
+  // Création manuelle d'un utilisateur avec un mot de passe temporaire
+  const tempPassword = Math.random().toString(36).slice(-10) + 'A1!' // Assure-toi que ça respecte les règles de complexité
+  const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
     email,
-    options: {
-      data: { full_name: name, role: 'tutor' },
+    password: tempPassword,
+    user_metadata: {
+      full_name: name,
+      role: 'tutor',
     },
   })
 
-  if (inviteRes.error) {
-    console.error('Erreur invitation:', inviteRes.error)
-    return NextResponse.json({ error: inviteRes.error.message }, { status: 500 })
+  if (createError) {
+    console.error('Erreur création utilisateur:', createError)
+    return NextResponse.json({ error: createError.message }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  // Optionnel : tu peux maintenant envoyer un courriel à `email` avec un lien pour réinitialiser son mot de passe
+
+  return NextResponse.json({ success: true, user: newUser })
 }
