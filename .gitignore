@@ -1,29 +1,12 @@
-# Fichiers de build
-.next/
-out/
-dist/
+# node
+node_modules
+.next
+dist
 
-# Dépendances
-node_modules/
-
-# Variables d’environnement
+# local env
 .env
 .env.local
 .env.*.local
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Dossiers système
+# système
 .DS_Store
-Thumbs.db
-
-# IDE / éditeurs
-.vscode/
-.idea/
-*.swp
-
-# Supabase config locale
-.supabase/
