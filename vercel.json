@@ -1,6 +1,7 @@
 {
   "functions": {
     "api/**.ts": {
+      "includedFiles": [],
       "env": [
         "SUPABASE_SERVICE_ROLE_KEY",
         "NEXT_PUBLIC_SUPABASE_URL",
