@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     error: userError,
   } = await supabase.auth.getUser()
 
-  if (userError) {
+  if (userError || !user) {
     console.error('Erreur récupération user:', userError)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -32,18 +32,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
-  const inviteRes = await supabase.auth.admin.createUser({
-    email,
-    email_confirm: false,
-    user_metadata: {
-      full_name: name,
-      role: 'tutor'
-    }
+  // Appel à l’API REST Admin avec la clé service_role dans l’en-tête
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      user_metadata: {
+        full_name: name,
+        role: 'tutor',
+      },
+    }),
   })
 
-  if (inviteRes.error) {
-    console.error('Erreur invitation:', inviteRes.error)
-    return NextResponse.json({ error: inviteRes.error.message }, { status: 500 })
+  if (!res.ok) {
+    const errorBody = await res.json()
+    console.error('Erreur invitation:', errorBody)
+    return NextResponse.json({ error: errorBody.message }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })
