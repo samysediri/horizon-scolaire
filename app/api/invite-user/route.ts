@@ -13,6 +13,8 @@ export async function POST(req: Request) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+  
+console.log('Clé utilisée:', serviceRoleKey)
 
   if (!serviceRoleKey || !supabaseUrl) {
     console.error("Clé ou URL Supabase manquante.")
