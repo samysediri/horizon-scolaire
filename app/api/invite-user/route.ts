@@ -1,7 +1,7 @@
 // app/api/invite-user/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   const body = await req.json()
   const { email, name } = body
 
@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-  if (!serviceRoleKey || !supabaseUrl) {
-    console.error('Clés d\'API manquantes:', { serviceRoleKey, supabaseUrl })
+  if (!serviceRoleKey || !supabaseUrl || !redirectTo) {
+    console.error('Clés d\'API manquantes:', { serviceRoleKey, supabaseUrl, redirectTo })
     return NextResponse.json({ error: 'Clés d\'API manquantes' }, { status: 500 })
   }
 
