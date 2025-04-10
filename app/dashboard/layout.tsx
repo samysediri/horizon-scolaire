@@ -1,14 +1,13 @@
-// app/dashboard/layout.tsx
-
-import './globals.css'
 import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import SupabaseProvider from '@/components/SupabaseProvider'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+import '../globals.css' // ✅ Corrigé : on monte d'un dossier
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const supabase = createClient() // ✅ PAS de await ici
+  const supabase = createClient()
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
