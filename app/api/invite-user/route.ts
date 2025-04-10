@@ -14,8 +14,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  console.log('USER:', user)
-
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
@@ -40,8 +38,7 @@ export async function POST(req: Request) {
     user_metadata: {
       full_name: name,
       role: 'tutor'
-    },
-    redirect_to: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+    }
   })
 
   if (inviteRes.error) {
