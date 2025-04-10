@@ -1,12 +1,13 @@
-// app/dashboard/layout.tsx
 import '@/app/globals.css'
 import { createServerClient } from '@/lib/supabase/server'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-const supabase = await createServerClient()
-const { data: { session } } = await supabase.auth.getSession()
-
+  const supabase = await createServerClient() as SupabaseClient
+  const {
+    data: { session }
+  } = await supabase.auth.getSession()
 
   return (
     <html lang="fr">
