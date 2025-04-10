@@ -1,34 +1,57 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+'use client'
 
-export default async function DashboardRedirect() {
-  const supabase = createServerComponentClient({ cookies })
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+export default function DashboardRedirect() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const router = useRouter()
+  const supabase = createPagesBrowserClient()
 
-  if (userError || !user) {
-    return <p className="p-4 text-red-600">Utilisateur non authentifié</p>
-  }
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser()
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
+      if (userError || !user) {
+        setError('Utilisateur non authentifié')
+        setLoading(false)
+        return
+      }
 
-  if (profileError || !profile) {
-    return <p className="p-4 text-red-600">Profil introuvable</p>
-  }
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
 
-  const role = profile.role
+      if (profileError || !profile) {
+        setError('Profil introuvable')
+        setLoading(false)
+        return
+      }
 
-  if (role === 'tuteur') redirect('/dashboard/tuteur')
-  else if (role === 'eleve') redirect('/dashboard/eleve')
-  else if (role === 'parent') redirect('/dashboard/parent')
-  else if (role === 'admin') redirect('/dashboard/admin')
-  else return <p className="p-4 text-red-600">Rôle inconnu : {role}</p>
+      const role = profile.role
+
+      if (role === 'tuteur') router.push('/dashboard/tuteur')
+      else if (role === 'eleve') router.push('/dashboard/eleve')
+      else if (role === 'parent') router.push('/dashboard/parent')
+      else if (role === 'admin') router.push('/dashboard/admin')
+      else {
+        setError(`Rôle inconnu : ${role}`)
+        setLoading(false)
+      }
+    }
+
+    checkUser()
+  }, [router])
+
+  if (loading) return <p>Chargement du tableau de bord...</p>
+  if (error) return <p>{error}</p>
+
+  return null
 }
