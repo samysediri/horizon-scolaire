@@ -20,6 +20,8 @@ export default function AjouterTuteur() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
+      console.log('USER:', user)
+
 
       if (!user) {
         setAuthorized(false)
