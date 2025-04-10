@@ -1,25 +1,27 @@
-import { ReactNode } from 'react'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import SupabaseProvider from '@/components/SupabaseProvider'
-import Nav from '@/components/Nav'
-import Footer from '@/components/Footer'
-import '../globals.css' // ✅ Corrigé : on monte d'un dossier
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const supabase = createClient()
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
 
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
+  if (!session) {
+    redirect('/login')
+  }
+
   return (
     <html lang="fr">
       <body>
-        <SupabaseProvider session={session}>
-          <Nav />
-          <main>{children}</main>
-          <Footer />
-        </SupabaseProvider>
+        {children}
       </body>
     </html>
   )
