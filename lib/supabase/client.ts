@@ -1,21 +1,16 @@
-// Fichier: lib/supabase/client.ts (ou createBrowserClient.ts)
+'use client'
 
 import { createBrowserClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { Database } from '@/types/supabase'
 
-export const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      get(name) {
-        const value = document.cookie
-          .split('; ')
-          .find((cookie) => cookie.startsWith(`${name}=`))
-          ?.split('=')[1]
+// Supabase côté client (dans les composants React)
+export const supabase = createClientComponentClient<Database>()
 
-        // CORRECTION : on retourne simplement la valeur brute
-        return value ?? null
-      },
-    },
-  }
-)
+// Supabase à usage général dans le browser
+export const createClient = () => {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
