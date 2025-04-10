@@ -3,8 +3,11 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
-  const supabase = createServerClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
   if (userError) {
     console.error('Erreur récupération user:', userError)
@@ -34,8 +37,8 @@ export async function POST(req: Request) {
   const inviteRes = await supabase.auth.admin.inviteUser({
     email,
     options: {
-      data: { full_name: name, role: 'tutor' }
-    }
+      data: { full_name: name, role: 'tutor' },
+    },
   })
 
   if (inviteRes.error) {
