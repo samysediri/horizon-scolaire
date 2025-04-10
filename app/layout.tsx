@@ -1,18 +1,32 @@
-// app/layout.tsx
 import './globals.css'
-import { Providers } from './providers'
-import { ReactNode } from 'react'
+import { Inter } from 'next/font/google'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { SupabaseProvider } from './supabase-provider'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Horizon Scolaire',
-  description: 'Plateforme de tutorat en ligne',
+  description: 'Plateforme de tutorat personnalisée',
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const supabase = createServerComponentClient({ cookies })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
   return (
     <html lang="fr">
-      <body>
-        <Providers>{children}</Providers>
+      <body className={inter.className}>
+        <SupabaseProvider session={session}>
+          {children}
+        </SupabaseProvider>
       </body>
     </html>
   )
