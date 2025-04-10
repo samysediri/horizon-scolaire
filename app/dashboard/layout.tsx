@@ -1,44 +1,26 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+// app/dashboard/layout.tsx
+import '@/app/globals.css'
+import { createServerClient } from '@/lib/supabase/server'
+import { ReactNode } from 'react'
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  // ✅ Pas besoin de passer de cookieStore
-  const supabase = createClient()
-
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const supabase = createServerClient()
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  if (!session) {
-    redirect('/login')
-  }
-
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single()
-
-  const role = profile?.role
-
-  if (error || !role) {
-    console.error('Rôle introuvable pour cet utilisateur')
-    redirect('/login')
-  }
-
-  // Si l'utilisateur tente d'accéder à /dashboard (racine), on le redirige vers son tableau de bord selon son rôle
-  const pathname = new URL(process.env.NEXT_PUBLIC_SITE_URL || '').pathname
-  if (pathname === '/dashboard') {
-    redirect(`/dashboard/${role}`)
-  }
-
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        {session ? (
+          <div>
+            <h1>Bienvenue sur le Dashboard</h1>
+            {children}
+          </div>
+        ) : (
+          <div>Utilisateur non authentifié</div>
+        )}
+      </body>
     </html>
   )
 }
