@@ -8,7 +8,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
-  const serviceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'] || ''
+ const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' // ta vraie clé ici entre guillemets
+
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
