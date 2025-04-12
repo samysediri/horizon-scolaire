@@ -1,14 +1,14 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,21 +16,58 @@ export default function LoginPage() {
   )
 
   const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setError(null)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+
     if (error) {
-      setError(error.message)
-    } else {
-      router.push('/dashboard')
+      setError("Connexion échouée : " + error.message)
+      return
     }
+
+    // On récupère la session pour être sûr qu’elle est bien stockée
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError || !sessionData.session) {
+      setError("Session invalide après la connexion")
+      return
+    }
+
+    // Redirection vers /dashboard qui redirige selon le rôle
+    router.push('/dashboard')
   }
 
   return (
-    <div>
-      <h1>Connexion</h1>
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <button onClick={handleLogin}>Se connecter</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div className="max-w-md mx-auto mt-20 p-4 border rounded shadow">
+      <h1 className="text-xl font-bold mb-4">Connexion</h1>
+
+      <input
+        className="w-full mb-2 p-2 border rounded"
+        type="email"
+        placeholder="Adresse courriel"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      <input
+        className="w-full mb-4 p-2 border rounded"
+        type="password"
+        placeholder="Mot de passe"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+        onClick={handleLogin}
+      >
+        Se connecter
+      </button>
+
+      {error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
   )
 }
