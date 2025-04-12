@@ -1,9 +1,14 @@
-'use server'
-
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+// lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export async function createServerClient() {
-  const supabase = createServerComponentClient({ cookies })
-  return supabase
+export const createSupabaseServerClient = () => {
+  const cookieStore = cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {
+      cookies: () => cookieStore,
+    }
+  )
 }
