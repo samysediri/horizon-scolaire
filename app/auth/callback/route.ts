@@ -1,45 +1,38 @@
 // app/auth/callback/route.ts
+import { createServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export async function GET(request: Request) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createServerClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    console.error('Erreur récupération utilisateur:', userError)
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (error || !user) {
+    console.error('Erreur de récupération utilisateur:', error)
+    return NextResponse.redirect(new URL('/login?erreur=auth', request.url))
   }
 
-  const { data, error } = await supabase
+  // Récupérer le profil dans la table "profiles"
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  console.log('USER ID:', user.id)
-  console.log('RÔLE TROUVÉ:', data?.role)
-  console.log('ERREUR SUPABASE:', error)
-
-  if (error || !data?.role) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (profileError || !profile) {
+    console.error('Erreur de récupération du profil:', profileError)
+    return NextResponse.redirect(new URL('/login?erreur=profil', request.url))
   }
 
-  switch (data.role) {
-    case 'admin':
-      return NextResponse.redirect(new URL('/dashboard/admin', request.url))
-    case 'tutor':
-      return NextResponse.redirect(new URL('/dashboard/tuteur', request.url))
-    case 'parent':
-      return NextResponse.redirect(new URL('/dashboard/parent', request.url))
-    case 'student':
-      return NextResponse.redirect(new URL('/dashboard/eleve', request.url))
-    default:
-      return NextResponse.redirect(new URL('/login', request.url))
+  let redirectUrl = '/dashboard'
+
+  if (profile.role === 'admin') {
+    redirectUrl = '/dashboard/admin'
+  } else if (profile.role === 'tuteur') {
+    redirectUrl = '/dashboard/tuteur'
+  } else if (profile.role === 'parent') {
+    redirectUrl = '/dashboard/parent'
   }
+
+  return NextResponse.redirect(new URL(redirectUrl, request.url))
 }
