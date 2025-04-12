@@ -22,16 +22,24 @@ export async function GET(request: Request) {
     .eq('id', user.id)
     .single()
 
+  console.log('USER ID:', user.id)
+  console.log('RÔLE TROUVÉ:', data?.role)
+  console.log('ERREUR SUPABASE:', error)
+
   if (error || !data?.role) {
-    console.error('Erreur récupération rôle:', error)
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  let redirectUrl = '/dashboard'
-  if (data.role === 'admin') redirectUrl = '/dashboard/admin'
-  else if (data.role === 'tutor') redirectUrl = '/dashboard/tuteur'
-  else if (data.role === 'parent') redirectUrl = '/dashboard/parent'
-  else if (data.role === 'student') redirectUrl = '/dashboard/eleve'
-
-  return NextResponse.redirect(new URL(redirectUrl, request.url))
+  switch (data.role) {
+    case 'admin':
+      return NextResponse.redirect(new URL('/dashboard/admin', request.url))
+    case 'tutor':
+      return NextResponse.redirect(new URL('/dashboard/tuteur', request.url))
+    case 'parent':
+      return NextResponse.redirect(new URL('/dashboard/parent', request.url))
+    case 'student':
+      return NextResponse.redirect(new URL('/dashboard/eleve', request.url))
+    default:
+      return NextResponse.redirect(new URL('/login', request.url))
+  }
 }
