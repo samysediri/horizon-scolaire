@@ -1,18 +1,11 @@
 // lib/supabase/server.ts
-import { createServerClient as createClient } from '@supabase/auth-helpers-nextjs'
+import { createPagesServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 export const createServerClient = () => {
   const cookieStore = cookies()
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+
+  return createPagesServerClient({
+    cookies: () => cookieStore,
+  })
 }
