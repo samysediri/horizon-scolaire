@@ -21,7 +21,7 @@ export default function AdminPage() {
       } = await supabase.auth.getUser()
 
       if (error || !user) {
-        console.error('Erreur de récupération de l\'utilisateur:', error)
+        console.error("Erreur de récupération de l'utilisateur:", error)
         router.push('/login')
         return
       }
