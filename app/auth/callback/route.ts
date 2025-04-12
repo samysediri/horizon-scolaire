@@ -13,32 +13,25 @@ export async function GET(request: Request) {
 
   if (userError || !user) {
     console.error('Erreur récupération utilisateur:', userError)
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`)
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirige selon le rôle
-  const { data: profile, error: profileError } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profile?.role) {
-    console.error('Erreur récupération rôle:', profileError)
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`)
+  if (error || !data?.role) {
+    console.error('Erreur récupération rôle:', error)
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  const role = profile.role
-  const redirectPath =
-    role === 'admin'
-      ? '/dashboard/admin'
-      : role === 'tutor'
-      ? '/dashboard/tuteur'
-      : role === 'parent'
-      ? '/dashboard/parent'
-      : role === 'student'
-      ? '/dashboard/eleve'
-      : '/dashboard'
+  let redirectUrl = '/dashboard'
+  if (data.role === 'admin') redirectUrl = '/dashboard/admin'
+  else if (data.role === 'tutor') redirectUrl = '/dashboard/tuteur'
+  else if (data.role === 'parent') redirectUrl = '/dashboard/parent'
+  else if (data.role === 'student') redirectUrl = '/dashboard/eleve'
 
-  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}${redirectPath}`)
+  return NextResponse.redirect(new URL(redirectUrl, request.url))
 }
