@@ -1,18 +1,9 @@
-import { createServerClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+// lib/supabase/server.ts
+'use server'
 
-export async function GET(request: Request) {
-  const supabase = await createServerClient()
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    console.error('Erreur récupération utilisateur:', userError)
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+export const createServerClient = async () => {
+  return createServerComponentClient({ cookies })
 }
