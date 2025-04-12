@@ -3,20 +3,43 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function AdminPage() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const router = useRouter()
   const supabase = createClientComponentClient()
 
   useEffect(() => {
     async function fetchUser() {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error) {
+      const {
+        data: { user },
+        error
+      } = await supabase.auth.getUser()
+
+      if (error || !user) {
         console.error('Erreur de récupération de l\'utilisateur:', error)
+        router.push('/login')
+        return
       }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profile) {
+        console.error('Erreur de récupération du rôle:', profileError)
+        router.push('/login')
+        return
+      }
+
       setUser(user)
+      setIsAdmin(profile.role === 'admin')
       setLoading(false)
     }
 
@@ -27,8 +50,8 @@ export default function AdminPage() {
     return <p className="text-gray-500">Chargement de l'utilisateur...</p>
   }
 
-  if (!user) {
-    return <p className="text-red-500">Utilisateur non connecté.</p>
+  if (!isAdmin) {
+    return <p className="text-red-500">Accès refusé. Vous devez être admin.</p>
   }
 
   return (
