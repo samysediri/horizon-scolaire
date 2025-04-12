@@ -1,25 +1,23 @@
+// app/dashboard/page.jsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-export default function DashboardPage() {
-  const supabase = createClient()
+export default function DashboardRedirectPage() {
   const router = useRouter()
-
-  const [role, setRole] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const fetchRole = async () => {
+    async function redirectUser() {
       const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
+        data: { user },
+        error
+      } = await supabase.auth.getUser()
 
-      if (sessionError || !session || !session.user) {
+      if (error || !user) {
+        console.error("Utilisateur non connecté", error)
         router.push('/login')
         return
       }
@@ -27,72 +25,28 @@ export default function DashboardPage() {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single()
 
       if (profileError || !profile) {
-        console.error('Erreur lors de la récupération du rôle', profileError)
-        setRole(null)
-      } else {
-        setRole(profile.role)
+        console.error("Profil non trouvé", profileError)
+        router.push('/login')
+        return
       }
 
-      setLoading(false)
+      if (profile.role === 'admin') {
+        router.push('/dashboard/admin')
+      } else if (profile.role === 'tuteur') {
+        router.push('/dashboard/tuteur')
+      } else if (profile.role === 'parent') {
+        router.push('/dashboard/parent')
+      } else {
+        router.push('/login')
+      }
     }
 
-    fetchRole()
-  }, [supabase, router])
+    redirectUser()
+  }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
-  if (loading) return <p className="p-4">Chargement...</p>
-
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Tableau de bord</h1>
-        <button
-          onClick={handleLogout}
-          className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
-        >
-          🔒 Se déconnecter
-        </button>
-      </div>
-
-      {role ? (
-        <div>
-          <p className="text-green-700 text-lg mb-4">
-            ✅ Vous êtes connecté en tant que <strong>{role}</strong>.
-          </p>
-
-          {role === 'admin' && (
-            <div className="space-y-2">
-              <Link
-                href="/dashboard/admin/ajouter-tuteur"
-                className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                ➕ Ajouter un tuteur
-              </Link>
-              <br />
-              <Link
-                href="/dashboard/admin/ajouter-eleve"
-                className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                ➕ Ajouter un élève
-              </Link>
-            </div>
-          )}
-
-          {role === 'tuteur' && <p>📚 Vous pouvez voir vos élèves ici.</p>}
-          {role === 'parent' && <p>👨‍👩‍👧 Vous pouvez voir les séances de vos enfants ici.</p>}
-          {role === 'eleve' && <p>🎓 Vos prochaines séances apparaîtront ici.</p>}
-        </div>
-      ) : (
-        <p className="text-red-600">❌ Impossible de déterminer votre rôle.</p>
-      )}
-    </div>
-  )
+  return <p className="text-gray-500">Redirection en cours...</p>
 }
