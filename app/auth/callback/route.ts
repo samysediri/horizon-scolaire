@@ -1,32 +1,41 @@
 // app/auth/callback/route.ts
-import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
+  const cookieStore = cookies()
   const supabase = createServerClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (error || !user) {
-    console.error("Erreur de récupération de l'utilisateur :", error)
-    return NextResponse.redirect(new URL('/login', request.url))
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    console.error('Erreur récupération utilisateur:', userError)
+    return redirect('/login')
   }
 
-  // Récupère le rôle de l'utilisateur depuis la table "profiles"
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profileError) {
-    console.error("Erreur de récupération du profil :", profileError)
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (profileError || !profile) {
+    console.error('Erreur récupération profil:', profileError)
+    return redirect('/dashboard') // fallback générique
   }
 
-  const redirectUrl = profile.role === 'admin'
-    ? '/dashboard/admin'
-    : '/dashboard'
+  if (profile.role === 'admin') {
+    return redirect('/dashboard/admin')
+  }
 
-  return NextResponse.redirect(new URL(redirectUrl, request.url))
+  // Tu peux ajouter d'autres rôles ici si tu veux :
+  if (profile.role === 'tuteur') {
+    return redirect('/dashboard/tuteur')
+  }
+
+  return redirect('/dashboard')
 }
