@@ -1,54 +1,30 @@
-// app/dashboard/admin/page.tsx
+// app/dashboard/admin/page.jsx
+'use client'
 
-import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-export default async function AdminDashboard() {
-  const supabase = createServerClient(cookies())
+export default function AdminPage() {
+  const [user, setUser] = useState(null)
+  const supabase = createClientComponentClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  useEffect(() => {
+    async function fetchUser() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
 
-  if (!user) {
-    return redirect('/login')
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return redirect('/dashboard')
-  }
+    fetchUser()
+  }, [])
 
   return (
-    <main style={{ padding: '2rem' }}>
-      <h1>Bienvenue sur le Dashboard</h1>
-      <h2>Tableau de bord Admin</h2>
-
-      <p style={{ marginTop: '1rem', fontWeight: 'bold', color: 'green' }}>
-        ✅ Vous êtes connecté en tant qu’<strong>admin</strong>.
-      </p>
-
-      <ul style={{ marginTop: '2rem', lineHeight: '2rem' }}>
-        <li>
-          <Link href="/dashboard/admin/ajouter-tuteur">➕ Ajouter un tuteur</Link>
-        </li>
-        <li>
-          <Link href="/dashboard/admin/ajouter-eleve">➕ Ajouter un élève</Link>
-        </li>
-        <li>
-          <Link href="/dashboard/admin/lier-tuteur-eleve">🔗 Lier un tuteur ↔ élève</Link>
-        </li>
-        <li>
-          <Link href="/dashboard/admin/utilisateurs">👥 Gérer les utilisateurs</Link>
-        </li>
-      </ul>
-    </main>
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Dashboard Admin</h1>
+      {user ? (
+        <p className="text-gray-700">Bienvenue, {user.email}</p>
+      ) : (
+        <p className="text-gray-500">Chargement de l'utilisateur...</p>
+      )}
+    </div>
   )
 }
