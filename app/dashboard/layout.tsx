@@ -1,25 +1,25 @@
 // app/dashboard/layout.tsx
 import '@/app/globals.css'
-import { createServerClient } from '@/lib/supabase/server'
 import type { ReactNode } from 'react'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const supabase: SupabaseClient = createServerClient()
+  const supabase = createServerClient()
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser()
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="mx-auto max-w-7xl">
-        <p className="text-sm text-gray-600 mb-2">
-          Connecté en tant que : <strong>{user?.email}</strong>
-        </p>
-        <div className="bg-white rounded-xl shadow p-4">
-          {children}
-        </div>
+  if (!user) {
+    return (
+      <div className="p-8">
+        <h2 className="text-xl text-red-500">Utilisateur non connecté</h2>
       </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      {children}
     </div>
   )
 }
