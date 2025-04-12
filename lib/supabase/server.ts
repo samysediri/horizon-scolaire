@@ -1,14 +1,8 @@
 // lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { Database } from '@/lib/database.types'
 
-export const createSupabaseServerClient = () => {
-  const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
-    {
-      cookies: () => cookieStore,
-    }
-  )
+export function createServerClient() {
+  return createServerComponentClient<Database>({ cookies })
 }
