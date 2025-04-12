@@ -1,24 +1,54 @@
-"use client";
-import Link from "next/link";
+// app/dashboard/admin/page.tsx
 
-export default function AdminDashboard() {
+import Link from 'next/link'
+import { createServerClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+export default async function AdminDashboard() {
+  const supabase = createServerClient(cookies())
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return redirect('/login')
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') {
+    return redirect('/dashboard')
+  }
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Tableau de bord Admin</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link href="/dashboard/admin/ajouter-eleve">
-          <div className="p-4 border rounded hover:bg-gray-100 cursor-pointer">
-            <h2 className="text-xl font-semibold">Ajouter un élève</h2>
-            <p className="text-sm text-gray-600">Créer un nouveau compte élève avec parent.</p>
-          </div>
-        </Link>
-        <Link href="/dashboard/admin/ajouter-tuteur">
-          <div className="p-4 border rounded hover:bg-gray-100 cursor-pointer">
-            <h2 className="text-xl font-semibold">Ajouter un tuteur</h2>
-            <p className="text-sm text-gray-600">Créer un nouveau compte tuteur et lui envoyer une invitation.</p>
-          </div>
-        </Link>
-      </div>
-    </div>
-  );
+    <main style={{ padding: '2rem' }}>
+      <h1>Bienvenue sur le Dashboard</h1>
+      <h2>Tableau de bord Admin</h2>
+
+      <p style={{ marginTop: '1rem', fontWeight: 'bold', color: 'green' }}>
+        ✅ Vous êtes connecté en tant qu’<strong>admin</strong>.
+      </p>
+
+      <ul style={{ marginTop: '2rem', lineHeight: '2rem' }}>
+        <li>
+          <Link href="/dashboard/admin/ajouter-tuteur">➕ Ajouter un tuteur</Link>
+        </li>
+        <li>
+          <Link href="/dashboard/admin/ajouter-eleve">➕ Ajouter un élève</Link>
+        </li>
+        <li>
+          <Link href="/dashboard/admin/lier-tuteur-eleve">🔗 Lier un tuteur ↔ élève</Link>
+        </li>
+        <li>
+          <Link href="/dashboard/admin/utilisateurs">👥 Gérer les utilisateurs</Link>
+        </li>
+      </ul>
+    </main>
+  )
 }
