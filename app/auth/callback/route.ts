@@ -1,11 +1,10 @@
 // app/auth/callback/route.ts
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export async function GET(request: Request) {
-  const cookieStore = cookies()
-  const supabase = createServerClient()
+  const supabase = createServerComponentClient({ cookies })
 
   const {
     data: { user },
@@ -17,29 +16,29 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`)
   }
 
+  // Redirige selon le rôle
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profile) {
-    console.error('Erreur récupération profil:', profileError)
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login`)
+  if (profileError || !profile?.role) {
+    console.error('Erreur récupération rôle:', profileError)
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`)
   }
 
-  if (profile.role === 'admin') {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/admin`)
-  }
+  const role = profile.role
+  const redirectPath =
+    role === 'admin'
+      ? '/dashboard/admin'
+      : role === 'tutor'
+      ? '/dashboard/tuteur'
+      : role === 'parent'
+      ? '/dashboard/parent'
+      : role === 'student'
+      ? '/dashboard/eleve'
+      : '/dashboard'
 
-  if (profile.role === 'tutor') {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/tuteur`)
-  }
-
-  if (profile.role === 'student') {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/eleve`)
-  }
-
-  // Par défaut, on redirige vers le tableau de bord de base
-  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`)
+  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}${redirectPath}`)
 }
