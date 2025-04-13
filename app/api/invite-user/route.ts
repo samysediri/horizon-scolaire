@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const body = await req.json()
-  const { email, nom, role } = body
+  const { email, name, role } = body
 
-  if (!email || !nom || !role) {
+  if (!email || !name || !role) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
   if (!serviceRoleKey || !supabaseUrl) {
+    console.error('Clés d’API manquantes:', { serviceRoleKey, supabaseUrl })
     return NextResponse.json({ error: 'Clés d’API manquantes' }, { status: 500 })
   }
 
@@ -25,18 +26,18 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       email,
       data: {
-        full_name: nom,
-        role: role,
-      }
+        full_name: name,
+        role, // <- on transmet dynamiquement
+      },
     }),
   })
 
   const userData = await response.json()
 
   if (!response.ok) {
-    console.error('Erreur invitation API:', userData)
-    return NextResponse.json({ error: userData.message || 'Erreur API' }, { status: 500 })
+    console.error('Erreur Supabase:', userData)
+    return NextResponse.json({ error: userData.message || 'Erreur Supabase' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, user_id: userData.user?.id || null })
+  return NextResponse.json({ success: true, user_id: userData.user?.id })
 }
