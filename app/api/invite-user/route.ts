@@ -42,17 +42,16 @@ export async function POST(req: Request) {
 
   let data = null
   try {
-    const text = await response.text()
-    data = text ? JSON.parse(text) : null
+    data = await response.json()
   } catch (jsonError) {
     console.error('Erreur parsing JSON Supabase:', jsonError)
-    return NextResponse.json({ error: 'Réponse non valide de Supabase (JSON)' }, { status: 500 })
+    return NextResponse.json({ error: 'Réponse vide de Supabase' }, { status: 500 })
   }
 
   if (!response.ok) {
     console.error('Erreur API Supabase:', data)
-    return NextResponse.json({ error: data?.message || 'Erreur API Supabase' }, { status: 500 })
+    return NextResponse.json({ error: data?.message || 'Erreur API' }, { status: 500 })
   }
 
-  return NextResponse.json({ user_id: data?.user?.id || null })
+  return NextResponse.json({ user_id: data.user?.id })
 }
