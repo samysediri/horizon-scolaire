@@ -2,15 +2,7 @@
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
-  let body
-
-  try {
-    body = await req.json()
-  } catch (parseError) {
-    console.error("Erreur de parsing JSON du body de la requête:", parseError)
-    return NextResponse.json({ error: 'Le body doit être un JSON valide' }, { status: 400 })
-  }
-
+  const body = await req.json()
   const { email, name, role } = body
 
   console.log("=== DEBUG INVITE USER ===")
@@ -50,10 +42,11 @@ export async function POST(req: Request) {
 
   let data = null
   try {
-    data = await response.json()
+    const text = await response.text()
+    data = text ? JSON.parse(text) : null
   } catch (jsonError) {
     console.error('Erreur parsing JSON Supabase:', jsonError)
-    return NextResponse.json({ error: 'Réponse vide ou invalide de Supabase' }, { status: 500 })
+    return NextResponse.json({ error: 'Réponse non valide de Supabase (JSON)' }, { status: 500 })
   }
 
   if (!response.ok) {
@@ -61,5 +54,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: data?.message || 'Erreur API Supabase' }, { status: 500 })
   }
 
-  return NextResponse.json({ user_id: data.user?.id || null })
+  return NextResponse.json({ user_id: data?.user?.id || null })
 }
