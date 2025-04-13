@@ -11,33 +11,31 @@ export async function POST(req: Request) {
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-  if (!serviceRoleKey || !supabaseUrl || !redirectTo) {
+  if (!serviceRoleKey || !supabaseUrl) {
     return NextResponse.json({ error: 'Configuration incomplète' }, { status: 500 })
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-  // 1. Créer l'utilisateur
+  // 1. Créer l'utilisateur avec email confirmé
   const { data: userData, error: userError } = await supabase.auth.admin.createUser({
     email,
     email_confirm: true,
     user_metadata: {
       nom,
       role,
-    },
-    redirect_to: redirectTo,
+    }
   })
 
   if (userError || !userData?.user?.id) {
-    console.error('Erreur lors de la création de l’utilisateur Supabase:', userError)
+    console.error('Erreur création utilisateur Supabase:', userError)
     return NextResponse.json({ error: userError?.message || 'Erreur création utilisateur' }, { status: 500 })
   }
 
   const user_id = userData.user.id
 
-  // 2. Ajouter le profil dans la table "profiles"
+  // 2. Ajouter dans "profiles"
   const { error: insertError } = await supabase.from('profiles').insert([
     {
       id: user_id,
@@ -48,8 +46,8 @@ export async function POST(req: Request) {
   ])
 
   if (insertError) {
-    console.error('Erreur lors de l’insertion dans profiles:', insertError)
-    return NextResponse.json({ error: 'Utilisateur créé mais erreur lors de l’insertion du profil' }, { status: 500 })
+    console.error('Erreur insertion profiles:', insertError)
+    return NextResponse.json({ error: 'Utilisateur créé, mais erreur dans profiles' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true, user_id })
