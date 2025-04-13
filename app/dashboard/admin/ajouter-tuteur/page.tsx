@@ -1,4 +1,3 @@
-// app/dashboard/admin/ajouter-tuteur/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -23,9 +22,9 @@ export default function AjouterTuteur() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
           email,
           role: 'tuteur',
+          metadata: { nom: name },
         }),
       })
 
