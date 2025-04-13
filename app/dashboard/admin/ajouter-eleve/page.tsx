@@ -11,12 +11,23 @@ export default function AjouterEleve() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // Va chercher les parents dans la table profiles
     const fetchParents = async () => {
-      const res = await fetch('/api/parents') // on va faire ce endpoint ensuite
-      const data = await res.json()
-      setParents(data)
+      try {
+        const res = await fetch('/api/parents')
+        const result = await res.json()
+
+        if (!res.ok) {
+          throw new Error(result.error || 'Erreur lors du chargement des parents')
+        }
+
+        setParents(Array.isArray(result) ? result : [])
+      } catch (err: any) {
+        console.error('Erreur dans fetchParents:', err)
+        setError('Impossible de charger les parents. Veuillez réessayer plus tard.')
+        setParents([])
+      }
     }
+
     fetchParents()
   }, [])
 
@@ -25,44 +36,34 @@ export default function AjouterEleve() {
     setSuccess(false)
     setError('')
 
-    // 1. Créer l'élève
-    const res = await fetch('/api/invite-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nom,
-        email,
-        role: 'eleve',
-      }),
-    })
+    try {
+      const res = await fetch('/api/invite-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, email, role: 'eleve' }),
+      })
 
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.error || 'Erreur à la création de l’élève')
-      return
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur à la création de l’élève')
+
+      const eleveId = data.user_id
+
+      const relationRes = await fetch('/api/lier-eleve-parent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eleve_id: eleveId, parent_id: parentId }),
+      })
+
+      if (!relationRes.ok) throw new Error('Erreur lors du lien avec le parent.')
+
+      setSuccess(true)
+      setNom('')
+      setEmail('')
+      setParentId('')
+    } catch (err: any) {
+      console.error('Erreur dans handleSubmit:', err)
+      setError(err.message || 'Une erreur est survenue.')
     }
-
-    const eleveId = data.user_id // on retournera ça dans l’API plus tard
-
-    // 2. Créer la relation avec le parent
-    const relationRes = await fetch('/api/lier-eleve-parent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eleve_id: eleveId,
-        parent_id: parentId,
-      }),
-    })
-
-    if (!relationRes.ok) {
-      setError('Erreur lors du lien avec le parent.')
-      return
-    }
-
-    setSuccess(true)
-    setNom('')
-    setEmail('')
-    setParentId('')
   }
 
   return (
@@ -96,7 +97,7 @@ export default function AjouterEleve() {
           required
         >
           <option value="">Sélectionner un parent</option>
-          {parents.map((parent) => (
+          {Array.isArray(parents) && parents.map((parent) => (
             <option key={parent.id} value={parent.id}>
               {parent.nom} ({parent.email})
             </option>
