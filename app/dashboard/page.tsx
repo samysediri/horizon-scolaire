@@ -1,7 +1,6 @@
-// app/dashboard/page.tsx
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types'
@@ -9,18 +8,18 @@ import type { Database } from '@/lib/database.types'
 export default function DashboardRedirectPage() {
   const router = useRouter()
   const supabase = createClientComponentClient<Database>()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function redirectUser() {
+    async function checkSession() {
       const {
-        data: { user },
+        data: { session },
         error
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getSession()
 
-      console.log("USER FETCHED:", user)
+      console.log("SESSION DANS /dashboard :", session)
 
-      if (error || !user) {
-        console.error("Utilisateur non connecté", error)
+      if (!session) {
         router.push('/login')
         return
       }
@@ -28,36 +27,21 @@ export default function DashboardRedirectPage() {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', user.id)
+        .eq('id', session.user.id)
         .single()
 
-      console.log("PROFILE FETCHED:", profile)
+      console.log("PROFILE:", profile)
 
-      if (profileError || !profile) {
-        console.error("Profil non trouvé", profileError)
-        router.push('/login')
-        return
-      }
+      if (profile?.role === 'admin') router.push('/dashboard/admin')
+      else if (profile?.role === 'tuteur') router.push('/dashboard/tuteur')
+      else if (profile?.role === 'parent') router.push('/dashboard/parent')
+      else router.push('/login')
 
-      console.log("Redirection vers:", profile.role)
-
-      switch (profile.role) {
-        case 'admin':
-          router.push('/dashboard/admin')
-          break
-        case 'tuteur':
-          router.push('/dashboard/tuteur')
-          break
-        case 'parent':
-          router.push('/dashboard/parent')
-          break
-        default:
-          router.push('/login')
-      }
+      setLoading(false)
     }
 
-    redirectUser()
+    checkSession()
   }, [])
 
-  return <p className="text-gray-500">Redirection en cours...</p>
+  return <p className="text-gray-500">{loading ? 'Chargement...' : 'Redirection...'}</p>
 }
