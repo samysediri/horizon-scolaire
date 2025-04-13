@@ -100,7 +100,8 @@ export default function DashboardTuteur() {
 
   const handleCompleterSeance = async () => {
     const dureeReelle = prompt("Entrez la durée réelle (en minutes):");
-    if (!dureeReelle || isNaN(dureeReelle)) return;
+    if (!dureeReelle || isNaN(Number(dureeReelle))) return;
+
 
     try {
       const response = await fetch('/api/lessonspace/replay', {
