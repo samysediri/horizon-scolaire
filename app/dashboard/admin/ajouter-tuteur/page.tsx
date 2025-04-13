@@ -6,16 +6,14 @@ export default function AjouterTuteur() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async () => {
+    setMessage('')
+
     if (!name || !email) {
       setMessage('Champs manquants')
       return
     }
-
-    setIsLoading(true)
-    setMessage('')
 
     try {
       const res = await fetch('/api/invite-user', {
@@ -30,52 +28,48 @@ export default function AjouterTuteur() {
         }),
       })
 
-      const data = await res.json()
+      let data = null
+      try {
+        data = await res.json()
+      } catch (err) {
+        console.error('Erreur parsing JSON:', err)
+        setMessage('Réponse vide de Supabase')
+        return
+      }
 
       if (!res.ok) {
         setMessage(data?.error || 'Erreur inconnue')
       } else {
-        setMessage('Invitation envoyée avec succès !')
+        setMessage('Invitation envoyée!')
         setName('')
         setEmail('')
       }
     } catch (err) {
       console.error('Erreur réseau:', err)
-      setMessage('Erreur réseau (réponse vide)')
-    } finally {
-      setIsLoading(false)
+      setMessage('Erreur réseau')
     }
   }
 
   return (
-    <div className="p-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Bienvenue sur le Dashboard</h1>
-      <h2 className="text-xl font-semibold mb-2">Ajouter un tuteur</h2>
-      <p className="mb-4">✅ Vous êtes connecté en tant qu’<strong>admin</strong>.</p>
-
-      {message && <p className="mb-4 text-sm text-red-600">{message}</p>}
+    <div>
+      <h1>Bienvenue sur le Dashboard</h1>
+      <h2>Ajouter un tuteur</h2>
+      <p>✅ Vous êtes connecté en tant qu’<strong>admin</strong>.</p>
+      {message && <p>{message}</p>}
 
       <input
         type="text"
         placeholder="Nom"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full p-2 mb-2 border rounded"
       />
       <input
         type="email"
         placeholder="Courriel"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full p-2 mb-4 border rounded"
       />
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-        disabled={isLoading}
-      >
-        {isLoading ? 'Envoi en cours...' : 'Envoyer l’invitation'}
-      </button>
+      <button onClick={handleSubmit}>Envoyer l’invitation</button>
     </div>
   )
 }
