@@ -8,6 +8,8 @@ export default function AjouterTuteur() {
   const [message, setMessage] = useState('')
 
   const handleSubmit = async () => {
+    setMessage('')
+
     if (!name || !email) {
       setMessage('Champs manquants')
       return
@@ -22,7 +24,15 @@ export default function AjouterTuteur() {
         body: JSON.stringify({ name, email, role: 'tuteur' }),
       })
 
-      const data = await res.json()
+      let data
+      try {
+        data = await res.json()
+      } catch (e) {
+        console.error('Réponse JSON invalide', e)
+        setMessage("Erreur réseau (réponse vide)")
+        return
+      }
+
       if (!res.ok) {
         setMessage(data.error || 'Erreur inconnue')
       } else {
