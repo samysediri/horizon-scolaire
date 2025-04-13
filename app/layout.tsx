@@ -1,8 +1,17 @@
 // app/layout.tsx
 import './globals.css'
-import { ReactNode } from 'react'
+import type { Metadata } from 'next'
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export const metadata: Metadata = {
+  title: 'Horizon Scolaire',
+  description: 'Plateforme de tutorat',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="fr">
       <body>{children}</body>
