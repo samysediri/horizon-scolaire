@@ -19,7 +19,7 @@ export default function AjouterTuteur() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name, email, role: 'tuteur' }),
       })
 
       const data = await res.json()
@@ -40,7 +40,7 @@ export default function AjouterTuteur() {
     <div>
       <h1>Bienvenue sur le Dashboard</h1>
       <h2>Ajouter un tuteur</h2>
-      <p>✅ Vous êtes connecté en tant qu’**admin**.</p>
+      <p>✅ Vous êtes connecté en tant qu’<strong>admin</strong>.</p>
       {message && <p>{message}</p>}
       <input
         type="text"
