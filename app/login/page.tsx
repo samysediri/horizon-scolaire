@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { Database } from '@/lib/database.types'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,10 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClientComponentClient<Database>()
 
   const handleLogin = async () => {
     setError(null)
@@ -28,15 +26,7 @@ export default function LoginPage() {
       return
     }
 
-    // On récupère la session pour être sûr qu’elle est bien stockée
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-
-    if (sessionError || !sessionData.session) {
-      setError("Session invalide après la connexion")
-      return
-    }
-
-    // Redirection vers /dashboard qui redirige selon le rôle
+    // Redirection vers /dashboard qui redirige ensuite selon le rôle
     router.push('/dashboard')
   }
 
@@ -50,6 +40,8 @@ export default function LoginPage() {
         placeholder="Adresse courriel"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        name="email"
+        id="email"
       />
 
       <input
@@ -58,6 +50,8 @@ export default function LoginPage() {
         placeholder="Mot de passe"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        name="password"
+        id="password"
       />
 
       <button
