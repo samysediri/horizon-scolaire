@@ -12,9 +12,11 @@ export async function POST(req: Request) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
+  console.log("Clé service:", process.env.SUPABASE_SERVICE_ROLE_KEY)
+
   if (!serviceRoleKey || !supabaseUrl) {
-    console.error('Clés d’API manquantes:', { serviceRoleKey, supabaseUrl })
-    return NextResponse.json({ error: 'Clés d’API manquantes' }, { status: 500 })
+    console.error('Clé API manquante')
+    return NextResponse.json({ error: 'Clé API manquante' }, { status: 500 })
   }
 
   const response = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
@@ -27,17 +29,17 @@ export async function POST(req: Request) {
       email,
       data: {
         full_name: name,
-        role, // <- on transmet dynamiquement
+        role,
       },
     }),
   })
 
-  const userData = await response.json()
+  const data = await response.json()
 
   if (!response.ok) {
-    console.error('Erreur Supabase:', userData)
-    return NextResponse.json({ error: userData.message || 'Erreur Supabase' }, { status: 500 })
+    console.error('Erreur API Supabase:', data)
+    return NextResponse.json({ error: data.message || 'Erreur API' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, user_id: userData.user?.id })
+  return NextResponse.json({ user_id: data.user?.id })
 }
