@@ -11,6 +11,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const tuteurId = searchParams.get('tuteur_id');
 
+  console.log('[API] Param tuteur_id reçu =', tuteurId); // 🪵 Log ajouté pour debug
+
   if (!tuteurId) {
     return NextResponse.json({ error: 'Paramètre "tuteur_id" manquant' }, { status: 400 });
   }
