@@ -5,14 +5,19 @@ export async function POST(req: Request) {
   const body = await req.json()
   const { email, name, role } = body
 
+  console.log("=== DEBUG INVITE USER ===")
+  console.log("SERVICE ROLE:", process.env.SUPABASE_SERVICE_ROLE_KEY)
+  console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+  console.log("EMAIL:", email)
+  console.log("NAME:", name)
+  console.log("ROLE:", role)
+
   if (!email || !name || !role) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
   }
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-
-  console.log("Clé service:", process.env.SUPABASE_SERVICE_ROLE_KEY)
 
   if (!serviceRoleKey || !supabaseUrl) {
     console.error('Clé API manquante')
@@ -35,11 +40,17 @@ export async function POST(req: Request) {
     }),
   })
 
-  const data = await response.json()
+  let data = null
+  try {
+    data = await response.json()
+  } catch (jsonError) {
+    console.error('Erreur parsing JSON Supabase:', jsonError)
+    return NextResponse.json({ error: 'Réponse vide de Supabase' }, { status: 500 })
+  }
 
   if (!response.ok) {
     console.error('Erreur API Supabase:', data)
-    return NextResponse.json({ error: data.message || 'Erreur API' }, { status: 500 })
+    return NextResponse.json({ error: data?.message || 'Erreur API' }, { status: 500 })
   }
 
   return NextResponse.json({ user_id: data.user?.id })
