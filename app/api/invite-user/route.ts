@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Erreur lors de la création du profil' }, { status: 500 })
     }
 
-    // ➕ Insertion dans "tuteurs" ou "eleves"
+    // ➕ Insertion dans "tuteurs", "eleves" ou "parents"
     if (role === 'tuteur') {
       const { error: tuteurError } = await supabase.from('tuteurs').insert([{ id: userId }])
       if (tuteurError) {
@@ -59,6 +59,12 @@ export async function POST(req: Request) {
       if (eleveError) {
         console.error('[API] Erreur insertion élève:', eleveError)
         return NextResponse.json({ error: 'Erreur lors de la création de l’élève' }, { status: 500 })
+      }
+    } else if (role === 'parent') {
+      const { error: parentError } = await supabase.from('parents').insert([{ id: userId }])
+      if (parentError) {
+        console.error('[API] Erreur insertion parent:', parentError)
+        return NextResponse.json({ error: 'Erreur lors de la création du parent' }, { status: 500 })
       }
     }
 
