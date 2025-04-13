@@ -11,12 +11,12 @@ export default function ListeElevesTuteur() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !user.id) {
       console.log('[Client] Utilisateur pas encore chargé...')
       return
     }
 
-    console.log('[Client] Utilisateur détecté :', user.id)
+    console.log('[Client] Utilisateur chargé :', user.id)
 
     const fetchEleves = async () => {
       try {
@@ -38,7 +38,7 @@ export default function ListeElevesTuteur() {
     }
 
     fetchEleves()
-  }, [user])
+  }, [user?.id]) // attend explicitement que l'id soit défini
 
   return (
     <div className="p-8">
@@ -51,7 +51,7 @@ export default function ListeElevesTuteur() {
         <ul className="list-disc ml-6">
           {eleves.map((eleve) => (
             <li key={eleve.id}>
-              {eleve.prenom} {eleve.nom} - {eleve.email}
+              {eleve.prenom || ''} {eleve.nom || ''} – {eleve.email}
             </li>
           ))}
         </ul>
