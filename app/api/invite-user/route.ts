@@ -1,9 +1,9 @@
 // app/api/invite-user/route.ts
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req: Request) {
-  const { email, nom, role } = await req.json()
+  const body = await req.json()
+  const { email, nom, role } = body
 
   if (!email || !nom || !role) {
     return NextResponse.json({ error: 'Champs manquants' }, { status: 400 })
@@ -11,44 +11,32 @@ export async function POST(req: Request) {
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-  if (!serviceRoleKey || !supabaseUrl) {
-    return NextResponse.json({ error: 'Configuration incomplète' }, { status: 500 })
+  if (!serviceRoleKey || !supabaseUrl || !redirectTo) {
+    return NextResponse.json({ error: 'Clés d’API manquantes' }, { status: 500 })
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey)
-
-  // 1. Créer l'utilisateur avec email confirmé
-  const { data: userData, error: userError } = await supabase.auth.admin.createUser({
-    email,
-    email_confirm: true,
-    user_metadata: {
-      nom,
-      role,
-    }
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/invite`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${serviceRoleKey}`,
+    },
+    body: JSON.stringify({
+      email,
+      data: {
+        nom,
+        role,
+      }
+    }),
   })
 
-  if (userError || !userData?.user?.id) {
-    console.error('Erreur création utilisateur Supabase:', userError)
-    return NextResponse.json({ error: userError?.message || 'Erreur création utilisateur' }, { status: 500 })
+  const result = await response.json()
+
+  if (!response.ok) {
+    return NextResponse.json({ error: result.message || 'Erreur API' }, { status: 500 })
   }
 
-  const user_id = userData.user.id
-
-  // 2. Ajouter dans "profiles"
-  const { error: insertError } = await supabase.from('profiles').insert([
-    {
-      id: user_id,
-      email,
-      nom,
-      role,
-    },
-  ])
-
-  if (insertError) {
-    console.error('Erreur insertion profiles:', insertError)
-    return NextResponse.json({ error: 'Utilisateur créé, mais erreur dans profiles' }, { status: 500 })
-  }
-
-  return NextResponse.json({ success: true, user_id })
+  return NextResponse.json({ success: true, user_id: result.user?.id || null })
 }
