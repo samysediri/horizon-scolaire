@@ -11,9 +11,8 @@ export async function POST(req: Request) {
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-  if (!serviceRoleKey || !supabaseUrl || !redirectTo) {
+  if (!serviceRoleKey || !supabaseUrl) {
     return NextResponse.json({ error: 'Clés d’API manquantes' }, { status: 500 })
   }
 
@@ -26,17 +25,18 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       email,
       data: {
-        nom,
-        role,
+        full_name: nom,
+        role: role,
       }
     }),
   })
 
-  const result = await response.json()
+  const userData = await response.json()
 
   if (!response.ok) {
-    return NextResponse.json({ error: result.message || 'Erreur API' }, { status: 500 })
+    console.error('Erreur invitation API:', userData)
+    return NextResponse.json({ error: userData.message || 'Erreur API' }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true, user_id: result.user?.id || null })
+  return NextResponse.json({ success: true, user_id: userData.user?.id || null })
 }
