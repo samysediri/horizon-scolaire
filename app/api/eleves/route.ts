@@ -1,21 +1,24 @@
-// app/api/eleves/route.ts
-import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+// Fichier : app/api/eleves/route.ts
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+);
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, nom')
-    .eq('role', 'eleve')
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, nom, prenom, email, lien_lessonspace')
+      .eq('role', 'eleve');
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) throw error;
+
+    return NextResponse.json(data);
+  } catch (err: any) {
+    console.error('[API] Erreur dans /api/eleves :', err.message);
+    return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 });
   }
-
-  return NextResponse.json(data)
 }
