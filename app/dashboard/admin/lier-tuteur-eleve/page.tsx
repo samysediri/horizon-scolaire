@@ -12,16 +12,21 @@ export default function LierTuteurElevePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [elevesRes, tuteursRes] = await Promise.all([
-        fetch('/api/eleves'),
-        fetch('/api/tuteurs')
-      ])
+      try {
+        const [elevesRes, tuteursRes] = await Promise.all([
+          fetch('/api/eleves'),
+          fetch('/api/tuteurs')
+        ])
 
-      const elevesData = await elevesRes.json()
-      const tuteursData = await tuteursRes.json()
+        const elevesData = await elevesRes.json()
+        const tuteursData = await tuteursRes.json()
 
-      if (elevesRes.ok) setEleves(elevesData)
-      if (tuteursRes.ok) setTuteurs(tuteursData)
+        if (elevesRes.ok) setEleves(elevesData)
+        if (tuteursRes.ok) setTuteurs(tuteursData)
+      } catch (err) {
+        console.error('Erreur dans fetchData:', err)
+        setMessage('Erreur lors du chargement des données')
+      }
     }
 
     fetchData()
