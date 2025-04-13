@@ -1,4 +1,4 @@
-// Fichier : app/dashboard/tuteur/horaire/page.jsx
+// Fichier : app/dashboard/tuteur/horaire/page.tsx
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -16,8 +16,8 @@ const locales = { fr };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export default function DashboardTuteur() {
@@ -34,11 +34,10 @@ export default function DashboardTuteur() {
       if (user) {
         setUserId(user.id);
 
-        const { data: eleves } = await supabase
-          .from('eleves')
-          .select('*')
-          .eq('tuteur_id', user.id);
-        setEleves(eleves || []);
+        // 🔄 Remplacé par endpoint qui retourne les élèves liés au tuteur
+        const elevesRes = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
+        const elevesData = await elevesRes.json();
+        setEleves(elevesData || []);
 
         const { data: seances } = await supabase
           .from('seances')
