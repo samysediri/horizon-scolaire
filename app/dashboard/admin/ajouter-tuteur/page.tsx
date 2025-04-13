@@ -1,3 +1,4 @@
+// app/dashboard/admin/ajouter-tuteur/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -24,52 +25,59 @@ export default function AjouterTuteur() {
         body: JSON.stringify({
           name,
           email,
-          role: 'tuteur',
+          role: 'tuteur', // Obligatoire pour l'API backend
         }),
       })
 
-      let data = null
-      try {
-        data = await res.json()
-      } catch (err) {
-        console.error('Erreur parsing JSON:', err)
-        setMessage('Réponse vide de Supabase')
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        setMessage(errorData?.error || 'Erreur inconnue')
         return
       }
 
-      if (!res.ok) {
-        setMessage(data?.error || 'Erreur inconnue')
-      } else {
-        setMessage('Invitation envoyée!')
-        setName('')
-        setEmail('')
+      const result = await res.json()
+      if (!result.user_id) {
+        setMessage('Invitation envoyée, mais ID non retourné.')
+        return
       }
+
+      setMessage(`Invitation envoyée à ${email} (ID: ${result.user_id})`)
+      setName('')
+      setEmail('')
     } catch (err) {
-      console.error('Erreur réseau:', err)
-      setMessage('Erreur réseau')
+      console.error('Erreur envoi:', err)
+      setMessage('Erreur réseau (réponse vide)')
     }
   }
 
   return (
-    <div>
-      <h1>Bienvenue sur le Dashboard</h1>
-      <h2>Ajouter un tuteur</h2>
-      <p>✅ Vous êtes connecté en tant qu’<strong>admin</strong>.</p>
-      {message && <p>{message}</p>}
+    <div className="p-8 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Bienvenue sur le Dashboard</h1>
+      <h2 className="text-xl mb-2">Ajouter un tuteur</h2>
+      <p className="mb-4">✅ Vous êtes connecté en tant qu’<strong>admin</strong>.</p>
+
+      {message && <p className="mb-4 text-red-600">{message}</p>}
 
       <input
         type="text"
         placeholder="Nom"
+        className="w-full p-2 mb-2 border rounded"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
       <input
         type="email"
         placeholder="Courriel"
+        className="w-full p-2 mb-4 border rounded"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button onClick={handleSubmit}>Envoyer l’invitation</button>
+      <button
+        onClick={handleSubmit}
+        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+      >
+        Envoyer l’invitation
+      </button>
     </div>
   )
 }
