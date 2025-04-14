@@ -13,9 +13,18 @@ export async function GET(req: Request) {
   }
 
   const { data, error } = await supabase
-    .from('tuteurs_eleves')
-    .select('eleve(id, prenom, nom, email, lien_lessonspace)')
-    .eq('tuteur_id', tuteur_id)
+  .from('tuteurs_eleves')
+  .select(`
+    eleve:eleves (
+      id,
+      prenom,
+      nom,
+      email,
+      lien_lessonspace
+    )
+  `)
+  .eq('tuteur_id', tuteur_id)
+
 
   if (error) {
     console.error('[API] Erreur tuteurs_eleves :', error)
@@ -23,8 +32,9 @@ export async function GET(req: Request) {
   }
 
   const eleves = (data || [])
-    .map((entry: any) => entry.eleve)
-    .filter((e: any) => e !== null)
+  .map((entry: any) => entry.eleve)
+  .filter((e: any) => e !== null)
+
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
 
