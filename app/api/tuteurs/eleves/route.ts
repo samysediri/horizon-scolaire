@@ -12,10 +12,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // 🔍 Requête avec jointure directe sur les colonnes et non relation imbriquée
+  // 🛠️ Requête avec relation imbriquée vers la table "eleves"
   const { data, error } = await supabase
     .from('tuteurs_eleves')
-    .select(`eleves:id, prenom, nom, email, lien_lessonspace`)
+    .select(`
+      eleves (
+        id,
+        prenom,
+        nom,
+        email,
+        lien_lessonspace
+      )
+    `)
     .eq('tuteur_id', tuteur_id)
 
   if (error) {
@@ -23,14 +31,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 🔁 Retourner les entrées telles quelles (non imbriquées)
-  const eleves = data.map((entry: any) => ({
-    id: entry.eleves,
-    prenom: entry.prenom,
-    nom: entry.nom,
-    email: entry.email,
-    lien_lessonspace: entry.lien_lessonspace
-  }))
+  // 🧠 Extraire proprement les élèves depuis la réponse imbriquée
+  const eleves = data
+    .map((entry: any) => entry.eleves)
+    .filter(Boolean) // enlève les entrées nulles (ex: si élève supprimé mais lien existant)
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
 
