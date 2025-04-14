@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useUser } from '@supabase/auth-helpers-react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
@@ -15,39 +15,34 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 const locales = { fr };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function DashboardTuteur() {
-  const [userId, setUserId] = useState('');
-  const [eleves, setEleves] = useState([]);
-  const [seances, setSeances] = useState([]);
+  const user = useUser();
+  const [eleves, setEleves] = useState<any[]>([]);
+  const [seances, setSeances] = useState<any[]>([]);
   const [newSeance, setNewSeance] = useState({ date: '', heure: '', duree: '', recurrence: 1 });
   const [selectedEleveId, setSelectedEleveId] = useState('');
-  const [selectedSeance, setSelectedSeance] = useState(null);
+  const [selectedSeance, setSelectedSeance] = useState<any>(null);
 
   useEffect(() => {
+    if (!user) {
+      console.log('[Client] Utilisateur pas encore chargé...');
+      return;
+    }
+
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
+      console.log('[Client] Utilisateur détecté :', user.id);
 
-        // 🔄 Remplacé par endpoint qui retourne les élèves liés au tuteur
-        const elevesRes = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
-        const elevesData = await elevesRes.json();
-        setEleves(elevesData || []);
+      const elevesRes = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
+      const elevesData = await elevesRes.json();
+      setEleves(elevesData || []);
 
-        const { data: seances } = await supabase
-          .from('seances')
-          .select('*')
-          .eq('tuteur_id', user.id);
-        setSeances(seances || []);
-      }
+      const seancesRes = await fetch(`/api/seances?tuteur_id=${user.id}`);
+      const seancesData = await seancesRes.json();
+      setSeances(seancesData || []);
     };
+
     fetchData();
-  }, []);
+  }, [user]);
 
   const handleAddSeance = async () => {
     if (!selectedEleveId || !newSeance.date || !newSeance.heure || !newSeance.duree) {
@@ -62,38 +57,41 @@ export default function DashboardTuteur() {
         return;
       }
 
-      const { error } = await supabase.from('seances').insert({
-        tuteur_id: userId,
-        eleve_id: selectedEleveId,
-        date: newSeance.date,
-        heure: newSeance.heure,
-        duree: newSeance.duree,
-        lien_lessonspace: eleve.lien_lessonspace,
-        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
-        accedee: false,
-        lien_revoir: null,
-        completee: false
+      const res = await fetch('/api/seances', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tuteur_id: user?.id,
+          eleve_id: selectedEleveId,
+          date: newSeance.date,
+          heure: newSeance.heure,
+          duree: newSeance.duree,
+          lien_lessonspace: eleve.lien_lessonspace,
+          eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
+        })
       });
 
-      if (error) {
-        alert(`Erreur Supabase : ${error.message}`);
-        return;
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Erreur');
 
       alert('Séance ajoutée!');
       location.reload();
-    } catch (err) {
+    } catch (err: any) {
       alert("Erreur inattendue : " + err.message);
     }
   };
 
-  const handleSelectEvent = (event) => {
+  const handleSelectEvent = (event: any) => {
     setSelectedSeance(event);
   };
 
   const handleDeleteSeance = async () => {
     if (!selectedSeance?.id) return;
-    await supabase.from('seances').delete().eq('id', selectedSeance.id);
+    await fetch(`/api/seances`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: selectedSeance.id })
+    });
     alert('Séance supprimée');
     location.reload();
   };
@@ -101,7 +99,6 @@ export default function DashboardTuteur() {
   const handleCompleterSeance = async () => {
     const dureeReelle = prompt("Entrez la durée réelle (en minutes):");
     if (!dureeReelle || isNaN(Number(dureeReelle))) return;
-
 
     try {
       const response = await fetch('/api/lessonspace/replay', {
@@ -116,24 +113,34 @@ export default function DashboardTuteur() {
         return;
       }
 
-      await supabase.from('seances')
-        .update({
+      await fetch(`/api/seances`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedSeance.id,
           completee: true,
           duree_reelle: parseInt(dureeReelle),
           lien_revoir: data.replay_url
         })
-        .eq('id', selectedSeance.id);
+      });
 
       alert("Séance complétée avec enregistrement!");
       location.reload();
-    } catch (err) {
+    } catch (err: any) {
       alert("Erreur inattendue : " + err.message);
     }
   };
 
   const handleAccederSeance = async () => {
     if (!selectedSeance?.id) return;
-    await supabase.from('seances').update({ accedee: true }).eq('id', selectedSeance.id);
+    await fetch(`/api/seances`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: selectedSeance.id,
+        accedee: true
+      })
+    });
     window.open(selectedSeance.lien, '_blank');
     location.reload();
   };
@@ -157,13 +164,10 @@ export default function DashboardTuteur() {
         localizer={localizer}
         events={seances.map(s => ({
           id: s.id,
-          title: 'Séance',
-          start: new Date(`${s.date}T${s.heure}`),
-          end: addMinutes(new Date(`${s.date}T${s.heure}`), parseInt(s.duree)),
-          lien: s.lien_lessonspace,
-          accedee: s.accedee,
-          lien_revoir: s.lien_revoir,
-          completee: s.completee
+          title: s.sujet || 'Séance',
+          start: new Date(s.debut),
+          end: new Date(s.fin),
+          ...s
         }))}
         startAccessor="start"
         endAccessor="end"
