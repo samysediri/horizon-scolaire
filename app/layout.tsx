@@ -1,6 +1,6 @@
 // Fichier : app/layout.tsx
-import './globals.css';
-import ClientProvider from './ClientProvider';
+import './globals.css'
+import ClientProvider from './ClientProvider'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,5 +11,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ClientProvider>
       </body>
     </html>
-  );
+  )
 }
