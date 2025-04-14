@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // ✅ Sélection imbriquée des champs dans la relation `eleves`
+  // ✅ Jointure imbriquée vers la table "eleves"
   const { data, error } = await supabase
     .from('tuteurs_eleves')
     .select(`
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // ✅ Extraire les objets `eleves` imbriqués
+  // ✅ Extraire directement les élèves imbriqués
   const eleves = data.map((entry: any) => entry.eleves)
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
