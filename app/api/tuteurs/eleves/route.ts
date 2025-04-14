@@ -31,7 +31,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const eleves = data.map((entry: any) => entry.eleves)
+  // ✅ Supprimer les null (au cas où la jointure échoue)
+  const eleves = (data || [])
+    .map((entry: any) => entry.eleves)
+    .filter((e: any) => e !== null)
 
   return NextResponse.json(eleves)
 }
