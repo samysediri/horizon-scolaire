@@ -13,10 +13,11 @@ export async function GET(req: Request) {
   }
 
   // ✅ Requête avec jointure imbriquée correcte
-  const { data, error } = await supabase
-    .from('tuteurs_eleves')
-    .select(`eleves(id, prenom, nom, email, lien_lessonspace)`)
-    .eq('tuteur_id', tuteur_id)
+ const { data, error } = await supabase
+  .from('tuteurs_eleves_details')
+  .select('*')
+  .eq('tuteur_id', tuteur_id)
+
 
   if (error) {
     console.error('[API] Erreur tuteurs_eleves :', error)
