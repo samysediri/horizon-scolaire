@@ -32,7 +32,8 @@ export async function GET(req: Request) {
   }
 
   // 🔁 Extraire les élèves de la structure imbriquée
-  const eleves = data.map((entry: any) => entry.eleves)
+  const eleves = data.map((entry: any) => entry.eleves).filter((eleve: any) => eleve !== null)
+
   console.debug('[DEBUG] Élèves reçus :', eleves)
 
   return NextResponse.json(eleves)
