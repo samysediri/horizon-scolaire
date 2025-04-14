@@ -12,11 +12,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // 🔍 Jointure entre tuteurs_eleves et eleves
+  // 🔍 Requête avec jointure sur la relation "eleve_id" déclarée dans Supabase
   const { data, error } = await supabase
     .from('tuteurs_eleves')
     .select(`
-      eleves (
+      eleve_id (
         id,
         prenom,
         nom,
@@ -31,10 +31,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // ✅ Supprimer les null (au cas où la jointure échoue)
-  const eleves = (data || [])
-    .map((entry: any) => entry.eleves)
-    .filter((e: any) => e !== null)
+  // 🔁 Extraire les élèves de la structure imbriquée
+  const eleves = data.map((entry: any) => entry.eleve_id)
 
   return NextResponse.json(eleves)
 }
