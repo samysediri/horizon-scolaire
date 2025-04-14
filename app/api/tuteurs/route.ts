@@ -11,20 +11,16 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('tuteurs')
-      .select('id, profiles (nom, email)')
+      .select('id, nom, email')
 
     if (error) {
       console.error('[API] Erreur récupération tuteurs:', error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const tuteurs = (data || []).map((tuteur: any) => ({
-      id: tuteur.id,
-      nom: tuteur.profiles?.nom || '',
-      email: tuteur.profiles?.email || ''
-    }))
+    console.log('[API] Tuteurs récupérés:', data)
 
-    return NextResponse.json(tuteurs)
+    return NextResponse.json(data)
   } catch (err: any) {
     console.error('[API] Exception:', err.message)
     return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 })
