@@ -12,9 +12,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
+  // ✅ Jointure corrigée avec alias explicite
   const { data, error } = await supabase
     .from('tuteurs_eleves')
-    .select(`eleve_id(id, prenom, nom, email, lien_lessonspace)`) // 👈 relation explicite
+    .select(`
+      eleves:eleve_id(id, prenom, nom, email, lien_lessonspace)
+    `)
     .eq('tuteur_id', tuteur_id)
 
   if (error) {
@@ -22,8 +25,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // ✅ Extraction et filtrage
   const eleves = (data || [])
-    .map((entry: any) => entry.eleve_id) // 👈 même nom ici
+    .map((entry: any) => entry.eleves)
     .filter((e: any) => e !== null)
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
