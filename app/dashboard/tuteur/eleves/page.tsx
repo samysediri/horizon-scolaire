@@ -1,10 +1,8 @@
-// Fichier : app/dashboard/tuteur/eleves/page.tsx
 "use client";
-
-import { useEffect, useState } from "react";
 import { useUser } from "@supabase/auth-helpers-react";
+import { useEffect, useState } from "react";
 
-export default function PageElevesTuteur() {
+export default function MesElevesPage() {
   const user = useUser();
   const [eleves, setEleves] = useState<any[]>([]);
 
@@ -18,33 +16,40 @@ export default function PageElevesTuteur() {
       console.log("[Client] Utilisateur détecté :", user.id);
       const res = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
       const data = await res.json();
-
-      if (!res.ok) {
-        console.error("[Client] Erreur API :", data?.error);
-        return;
-      }
-
-      console.log("[Client] Eleves reçus :", data);
-      setEleves(data);
+      console.log("[DEBUG] Élèves reçus :", data);
+      setEleves(data || []);
     };
 
     fetchEleves();
   }, [user]);
 
   return (
-    <div className="p-6">
+    <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Mes élèves</h1>
       {eleves.length === 0 ? (
         <p>Aucun élève trouvé.</p>
       ) : (
         <ul className="space-y-2">
-          {eleves.map((e, i) => (
-            <li key={i} className="border rounded p-3 shadow">
-              <p className="font-semibold">{e.prenom} {e.nom}</p>
-              <p className="text-sm text-gray-600">{e.email}</p>
-              <p className="text-sm text-gray-500 italic">{e.lien_lessonspace}</p>
-            </li>
-          ))}
+          {eleves.map((eleve, i) =>
+            eleve ? (
+              <li key={i} className="border p-4 rounded">
+                <p>
+                  <strong>Nom :</strong> {eleve.prenom || "(prénom manquant)"} {eleve.nom || ""}
+                </p>
+                <p>
+                  <strong>Courriel :</strong> {eleve.email || "inconnu"}
+                </p>
+                <p>
+                  <strong>Lien Lessonspace :</strong>{" "}
+                  {eleve.lien_lessonspace || "non disponible"}
+                </p>
+              </li>
+            ) : (
+              <li key={i} className="text-red-600">
+                Élève invalide (entrée nulle)
+              </li>
+            )
+          )}
         </ul>
       )}
     </div>
