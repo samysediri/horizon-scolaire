@@ -1,20 +1,19 @@
-// app/layout.tsx
+// Fichier : app/layout.tsx (ou app/_app.tsx pour les anciens projets)
+import { useState } from 'react'
+import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { SessionContextProvider } from '@supabase/auth-helpers-react'
 import './globals.css'
-import type { Metadata } from 'next'
 
-export const metadata: Metadata = {
-  title: 'Horizon Scolaire',
-  description: 'Plateforme de tutorat',
-}
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [supabase] = useState(() => createBrowserSupabaseClient())
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        <SessionContextProvider supabaseClient={supabase}>
+          {children}
+        </SessionContextProvider>
+      </body>
     </html>
   )
 }
