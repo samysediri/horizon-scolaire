@@ -34,6 +34,7 @@ export default function DashboardTuteur() {
 
       const elevesRes = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
       const elevesData = await elevesRes.json();
+      console.log('[DEBUG] Élèves reçus :', elevesData);
       setEleves(elevesData || []);
 
       const seancesRes = await fetch(`/api/seances?tuteur_id=${user.id}`);
@@ -51,7 +52,10 @@ export default function DashboardTuteur() {
     }
 
     try {
-      const eleve = eleves.find(e => e.id === selectedEleveId);
+      const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
+      console.log('[DEBUG] ID élève sélectionné :', selectedEleveId);
+      console.log('[DEBUG] Élève trouvé :', eleve);
+
       if (!eleve?.lien_lessonspace) {
         alert("Le lien Lessonspace de l'élève est manquant. Ajoutez-le dans Supabase.");
         return;
