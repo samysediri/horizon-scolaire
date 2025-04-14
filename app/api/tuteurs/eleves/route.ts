@@ -12,7 +12,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // 🔍 Requête avec jointure sur la relation "eleve_id" déclarée dans Supabase
   const { data, error } = await supabase
     .from('tuteurs_eleves')
     .select(`
@@ -31,8 +30,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 🔁 Extraire les élèves de la structure imbriquée
-  const eleves = data.map((entry: any) => entry.eleve_id)
+  // 💡 On filtre les null pour éviter les erreurs côté client
+  const eleves = data
+    .map((entry: any) => entry.eleve_id)
+    .filter((eleve: any) => eleve !== null)
 
   return NextResponse.json(eleves)
 }
