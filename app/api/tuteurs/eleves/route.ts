@@ -12,14 +12,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // ✅ Jointure explicite
   const { data, error } = await supabase
     .from('tuteurs_eleves')
-    .select(`
-      eleve:eleves (
-        id, prenom, nom, email, lien_lessonspace
-      )
-    `)
+    .select(`eleve_id(id, prenom, nom, email, lien_lessonspace)`) // 👈 relation explicite
     .eq('tuteur_id', tuteur_id)
 
   if (error) {
@@ -28,7 +23,7 @@ export async function GET(req: Request) {
   }
 
   const eleves = (data || [])
-    .map((entry: any) => entry.eleve)
+    .map((entry: any) => entry.eleve_id) // 👈 même nom ici
     .filter((e: any) => e !== null)
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
