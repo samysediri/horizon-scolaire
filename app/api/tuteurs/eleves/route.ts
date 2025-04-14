@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // 🛠️ Requête avec relation imbriquée vers la table "eleves"
+  // ✅ Sélection imbriquée des champs dans la relation `eleves`
   const { data, error } = await supabase
     .from('tuteurs_eleves')
     .select(`
@@ -31,10 +31,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 🧠 Extraire proprement les élèves depuis la réponse imbriquée
-  const eleves = data
-    .map((entry: any) => entry.eleves)
-    .filter(Boolean) // enlève les entrées nulles (ex: si élève supprimé mais lien existant)
+  // ✅ Extraire les objets `eleves` imbriqués
+  const eleves = data.map((entry: any) => entry.eleves)
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
 
