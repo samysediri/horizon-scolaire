@@ -12,12 +12,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // ✅ Jointure corrigée avec alias explicite
+  // ✅ Correction ici : on utilise le nom exact de la relation définie dans Supabase (probablement "eleve")
   const { data, error } = await supabase
     .from('tuteurs_eleves')
-    .select(`
-      eleves:eleve_id(id, prenom, nom, email, lien_lessonspace)
-    `)
+    .select(`eleve(id, prenom, nom, email, lien_lessonspace)`)
     .eq('tuteur_id', tuteur_id)
 
   if (error) {
@@ -25,9 +23,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // ✅ Extraction et filtrage
+  // 🔁 On extrait les objets imbriqués et on filtre les nulls
   const eleves = (data || [])
-    .map((entry: any) => entry.eleves)
+    .map((entry: any) => entry.eleve)
     .filter((e: any) => e !== null)
 
   console.debug('[DEBUG] Élèves reçus :', eleves)
