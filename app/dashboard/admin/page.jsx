@@ -46,6 +46,11 @@ export default function AdminPage() {
     fetchUser()
   }, [])
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
   if (loading) {
     return <p className="text-gray-500">Chargement de l'utilisateur...</p>
   }
@@ -56,7 +61,16 @@ export default function AdminPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Dashboard Admin</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Dashboard Admin</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
+        >
+          Se déconnecter
+        </button>
+      </div>
+
       <p className="text-gray-700 mb-6">Bienvenue, {user.email}</p>
       <div className="grid gap-4">
         <Link href="/dashboard/admin/ajouter-tuteur" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Ajouter un tuteur</Link>
