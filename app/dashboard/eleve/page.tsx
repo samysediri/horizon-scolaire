@@ -1,39 +1,61 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { differenceInYears, parseISO } from 'date-fns'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
-
-export default function FicheEleve() {
-  const { id } = useParams()
+export default function DashboardEleve() {
   const [eleve, setEleve] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const fetchEleve = async () => {
-      const { data, error } = await supabase
-        .from('eleves')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle()
-
-      if (error) {
-        console.error('Erreur lors du chargement de la fiche élève:', error.message)
+    const fetchData = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (error || !user) {
+        console.error('Utilisateur non connecté')
+        router.push('/login')
         return
       }
 
-      setEleve(data)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || profile?.role !== 'eleve') {
+        console.error('Accès refusé')
+        router.push('/login')
+        return
+      }
+
+      const { data: eleveData, error: eleveError } = await supabase
+        .from('eleves')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (eleveError) {
+        console.error('Erreur chargement élève:', eleveError.message)
+        return
+      }
+
+      setEleve(eleveData)
+      setLoading(false)
     }
 
-    if (id) fetchEleve()
-  }, [id])
+    fetchData()
+  }, [])
 
-  if (!eleve) return <p className="p-6 text-gray-600">Chargement de la fiche élève...</p>
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  if (loading || !eleve) return <p className="p-6 text-gray-500">Chargement...</p>
 
   const age = eleve.date_naissance
     ? differenceInYears(new Date(), parseISO(eleve.date_naissance))
@@ -41,7 +63,15 @@ export default function FicheEleve() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Fiche de {eleve.prenom} {eleve.nom}</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Fiche de {eleve.prenom} {eleve.nom}</h2>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
+        >
+          Se déconnecter
+        </button>
+      </div>
       <div className="space-y-2 text-gray-800">
         <p><strong>Courriel de l’élève :</strong> {eleve.email}</p>
         <p><strong>Courriel du parent :</strong> {eleve.parent_email}</p>
@@ -53,4 +83,3 @@ export default function FicheEleve() {
     </div>
   )
 }
-
