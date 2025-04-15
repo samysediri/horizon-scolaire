@@ -1,13 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
+// Fichier : app/api/eleves/route.ts
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, cookieStore } from '@supabase/ssr'
 
 export async function GET() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies }
+    {
+      cookies: () => cookieStore()
+    }
   )
 
   // Obtenir l'utilisateur connecté
@@ -20,7 +21,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Utilisateur non authentifié' }, { status: 401 })
   }
 
-  // Obtenir le tuteur_id à partir du profil
+  // Obtenir le profil lié (doit être dans la table "profiles")
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
@@ -33,7 +34,7 @@ export async function GET() {
 
   const tuteur_id = profile.id
 
-  // Faire une jointure pour trouver les élèves associés
+  // Requête pour récupérer les élèves associés à ce tuteur
   const { data, error } = await supabase
     .from('tuteurs_eleves')
     .select('eleves(id, prenom, nom, email)')
@@ -44,7 +45,6 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Extraire la liste d'élèves
   const eleves = data.map((entry) => entry.eleves)
 
   return NextResponse.json(eleves)
