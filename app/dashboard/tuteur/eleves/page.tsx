@@ -1,4 +1,5 @@
 "use client";
+
 import { useUser } from "@supabase/auth-helpers-react";
 import { useEffect, useState } from "react";
 
@@ -14,7 +15,7 @@ export default function MesElevesPage() {
 
     const fetchEleves = async () => {
       console.log("[Client] Utilisateur détecté :", user.id);
-      const res = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
+      const res = await fetch("/api/tuteurs/eleves"); // ✅ appel corrigé ici
       const data = await res.json();
       console.log("[DEBUG] Élèves reçus :", data);
       setEleves(data || []);
@@ -32,23 +33,13 @@ export default function MesElevesPage() {
         <ul className="space-y-2">
           {eleves.map((eleve, i) =>
             eleve ? (
-              <li key={i} className="border p-4 rounded">
-                <p>
-                  <strong>Nom :</strong> {eleve.prenom || "(prénom manquant)"} {eleve.nom || ""}
+              <li key={i} className="border p-4 rounded shadow">
+                <p className="font-semibold">
+                  {eleve.prenom} {eleve.nom}
                 </p>
-                <p>
-                  <strong>Courriel :</strong> {eleve.email || "inconnu"}
-                </p>
-                <p>
-                  <strong>Lien Lessonspace :</strong>{" "}
-                  {eleve.lien_lessonspace || "non disponible"}
-                </p>
+                <p className="text-sm text-gray-600">{eleve.email}</p>
               </li>
-            ) : (
-              <li key={i} className="text-red-600">
-                Élève invalide (entrée nulle)
-              </li>
-            )
+            ) : null
           )}
         </ul>
       )}
