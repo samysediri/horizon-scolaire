@@ -12,23 +12,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'tuteur_id manquant' }, { status: 400 })
   }
 
-  // ✅ Correction ici : on utilise le nom exact de la relation définie dans Supabase (probablement "eleve")
+  // ✅ Requête directe sur la vue
   const { data, error } = await supabase
-    .from('tuteurs_eleves')
-    .select(`eleve(id, prenom, nom, email, lien_lessonspace)`)
+    .from('tuteurs_eleves_details')
+    .select('*')
     .eq('tuteur_id', tuteur_id)
 
   if (error) {
-    console.error('[API] Erreur tuteurs_eleves :', error)
+    console.error('[API] Erreur tuteurs_eleves_details :', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // 🔁 On extrait les objets imbriqués et on filtre les nulls
-  const eleves = (data || [])
-    .map((entry: any) => entry.eleve)
-    .filter((e: any) => e !== null)
+  console.debug('[DEBUG] Élèves reçus via la vue :', data)
 
-  console.debug('[DEBUG] Élèves reçus :', eleves)
-
-  return NextResponse.json(eleves)
+  return NextResponse.json(data)
 }
