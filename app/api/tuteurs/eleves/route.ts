@@ -1,4 +1,3 @@
-// Fichier : app/api/tuteurs/eleves/route.ts
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -8,11 +7,10 @@ export async function GET() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: cookies()
+      cookies: cookies() // ✅ ici on appelle la fonction directement
     }
   )
 
-  // Obtenir l'utilisateur connecté
   const {
     data: { user },
     error: userError,
@@ -22,7 +20,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Utilisateur non authentifié' }, { status: 401 })
   }
 
-  // Obtenir le profil lié (doit être dans la table "profiles")
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
@@ -35,7 +32,6 @@ export async function GET() {
 
   const tuteur_id = profile.id
 
-  // Requête pour récupérer les élèves associés à ce tuteur
   const { data, error } = await supabase
     .from('tuteurs_eleves')
     .select('eleves(id, prenom, nom, email)')
