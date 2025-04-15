@@ -28,7 +28,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('tuteurs_eleves')
-    .select('eleves(id, prenom, nom, email)')
+.select('eleves!tuteurs_eleves_eleve_id_fkey(id, prenom, nom, email)')
     .eq('tuteur_id', tuteur_id)
 
   if (error) {
