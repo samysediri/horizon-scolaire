@@ -15,7 +15,7 @@ export default function MesElevesPage() {
 
     const fetchEleves = async () => {
       console.log("[Client] Utilisateur détecté :", user.id);
-      const res = await fetch("/api/tuteurs/eleves"); // ✅ appel corrigé ici
+      const res = await fetch("/api/tuteurs/eleves"); // ✅ appel API corrigé
       const data = await res.json();
       console.log("[DEBUG] Élèves reçus :", data);
       setEleves(data || []);
