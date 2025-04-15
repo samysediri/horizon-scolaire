@@ -26,8 +26,33 @@ export default function LoginPage() {
       return
     }
 
-    // Redirection vers /dashboard qui redirige ensuite selon le rôle
-    router.push('/dashboard')
+    // On récupère le rôle immédiatement après connexion
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.role) {
+      setError("Rôle introuvable")
+      return
+    }
+
+    if (profile.role === 'admin') {
+      router.push('/dashboard/admin')
+    } else if (profile.role === 'tuteur') {
+      router.push('/dashboard/tuteur')
+    } else if (profile.role === 'eleve') {
+      router.push('/dashboard/eleve')
+    } else if (profile.role === 'parent') {
+      router.push('/dashboard/parent')
+    } else {
+      setError("Rôle non reconnu")
+    }
   }
 
   return (
