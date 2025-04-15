@@ -1,13 +1,14 @@
-// Fichier : app/api/eleves/route.ts
+// Fichier : app/api/tuteurs/eleves/route.ts
 import { NextResponse } from 'next/server'
-import { createServerClient, cookieStore } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: () => cookieStore()
+      cookies: cookies()
     }
   )
 
