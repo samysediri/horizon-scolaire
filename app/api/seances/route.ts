@@ -1,3 +1,4 @@
+// Fichier : app/api/seances/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -6,8 +7,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Fonction pour formatter en "YYYY-MM-DD HH:mm:ss"
-function formatDateToLocalString(date: Date) {
+// Formate une Date JS vers le format "YYYY-MM-DD HH:MM:SS" en heure locale
+function formatLocalDateTime(date: Date) {
   const pad = (n: number) => n.toString().padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
          `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
@@ -24,15 +25,14 @@ export async function POST(req: NextRequest) {
 
     const [year, month, day] = date.split('-').map(Number)
     const [hours, minutes] = heure.split(':').map(Number)
-
     const debut = new Date(year, month - 1, day, hours, minutes)
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: formatDateToLocalString(debut), // ⬅️ format local explicite
-      fin: formatDateToLocalString(fin),
+      debut: formatLocalDateTime(debut),  // 👈 format local explicite
+      fin: formatLocalDateTime(fin),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
