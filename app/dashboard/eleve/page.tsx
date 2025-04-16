@@ -51,6 +51,11 @@ export default function DashboardEleve() {
     fetchData()
   }, [])
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
   if (loading) return <p>{debug}</p>
   if (!eleve) return <p>{debug}</p>
 
@@ -59,6 +64,14 @@ export default function DashboardEleve() {
       <h1 className="text-2xl font-bold mb-4">Bienvenue {eleve.prenom} {eleve.nom}</h1>
       <p className="mb-2">📧 {eleve.email}</p>
       <p className="mb-2">🎯 Lien Lessonspace : <a className="text-blue-600 underline" href={eleve.lien_lessonspace}>{eleve.lien_lessonspace}</a></p>
+
+      <button
+        onClick={handleLogout}
+        className="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+      >
+        Se déconnecter
+      </button>
+
       <div className="mt-4 text-sm text-gray-500">✅ {debug}</div>
     </div>
   )
