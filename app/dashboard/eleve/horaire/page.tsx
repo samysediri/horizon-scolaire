@@ -1,78 +1,83 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useEffect, useState } from 'react';
+import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
+import format from 'date-fns/format';
+import parse from 'date-fns/parse';
+import startOfWeek from 'date-fns/startOfWeek';
+import getDay from 'date-fns/getDay';
+import fr from 'date-fns/locale/fr';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-export default function DashboardEleve() {
-  const [user, setUser] = useState(null)
-  const [eleve, setEleve] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [debug, setDebug] = useState('Démarrage...')
-  const router = useRouter()
-  const supabase = createClientComponentClient()
+const locales = { fr };
+const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
+
+export default function HoraireEleve() {
+  const user = useUser();
+  const supabase = useSupabaseClient();
+  const [seances, setSeances] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [debug, setDebug] = useState('Chargement des séances...');
 
   useEffect(() => {
-    const fetchData = async () => {
-      setDebug('Étape 1 : récupération utilisateur...')
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const fetchSeances = async () => {
+      if (!user) return;
+      setDebug('🔄 Récupération des séances...');
 
-      if (userError || !user) {
-        setDebug(`Erreur utilisateur : ${userError?.message || 'non connecté'}`)
-        router.push('/login')
-        return
-      }
-
-      setDebug(`Étape 2 : utilisateur détecté : ${user.id}`)
-      setUser(user)
-
-      setDebug('Étape 3 : recherche dans la table "eleves"...')
-      const { data: profil, error: profilError } = await supabase
-        .from('eleves')
+      const { data, error } = await supabase
+        .from('seances')
         .select('*')
-        .eq('id', user.id)
-        .maybeSingle()
+        .eq('eleve_id', user.id);
 
-      if (profilError) {
-        setDebug(`Erreur chargement élève : ${profilError.message}`)
-        return
+      if (error) {
+        setDebug(`❌ Erreur : ${error.message}`);
+      } else {
+        setSeances(data || []);
+        setDebug('✅ Séances chargées');
       }
 
-      if (!profil) {
-        setDebug(`Aucun élève trouvé avec cet ID : ${user.id}`)
-        return
-      }
+      setLoading(false);
+    };
 
-      setDebug('Élève trouvé avec succès 🎉')
-      setEleve(profil)
-      setLoading(false)
-    }
+    fetchSeances();
+  }, [user, supabase]);
 
-    fetchData()
-  }, [])
+  const defaultMin = new Date();
+  defaultMin.setHours(6, 0, 0, 0);
+  const defaultMax = new Date();
+  defaultMax.setHours(22, 0, 0, 0);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
+  const allStarts = seances.map(s => new Date(s.debut));
+  const allEnds = seances.map(s => new Date(s.fin));
 
-  if (loading) return <p>{debug}</p>
-  if (!eleve) return <p>{debug}</p>
+  const minTime = allStarts.length ? new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime()))) : defaultMin;
+  const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
+
+  if (loading) return <p className="p-6 text-gray-500">{debug}</p>;
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Bienvenue {eleve.prenom} {eleve.nom}</h1>
-      <p className="mb-2">📧 {eleve.email}</p>
-      <p className="mb-2">🎯 Lien Lessonspace : <a className="text-blue-600 underline" href={eleve.lien_lessonspace}>{eleve.lien_lessonspace}</a></p>
+      <h1 className="text-2xl font-bold mb-4">🗓️ Mon horaire</h1>
+      <Calendar
+        localizer={localizer}
+        events={seances.map(s => ({
+          id: s.id,
+          title: s.sujet || 'Séance',
+          start: new Date(s.debut),
+          end: new Date(s.fin),
+          ...s
+        }))}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 'calc(100vh - 200px)' }}
+        defaultView={Views.WEEK}
+        min={minTime}
+        max={maxTime}
+        scrollToTime={minTime}
+      />
 
-      <button
-        onClick={handleLogout}
-        className="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-      >
-        Se déconnecter
-      </button>
-
-      <div className="mt-4 text-sm text-gray-500">✅ {debug}</div>
+      <div className="mt-4 text-sm text-gray-500">{debug}</div>
     </div>
-  )
+  );
 }
