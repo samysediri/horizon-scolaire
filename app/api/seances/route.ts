@@ -1,7 +1,5 @@
-// Fichier : app/api/seances/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import { zonedTimeToUtc } from 'date-fns-tz'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,9 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    // Combine date et heure dans le fuseau horaire de Montréal
-    const localDateTime = `${date}T${heure}:00`
-    const debut = zonedTimeToUtc(localDateTime, 'America/Toronto')
+    // Convertir à l'heure du Québec (UTC-4)
+    const [year, month, day] = date.split('-').map(Number)
+    const [hours, minutes] = heure.split(':').map(Number)
+    const localDate = new Date(Date.UTC(year, month - 1, day, hours + 4, minutes)) // +4 pour compenser le toISOString
+
+    const debut = localDate
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { error } = await supabase.from('seances').insert({
