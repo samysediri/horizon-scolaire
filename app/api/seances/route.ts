@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    // Création d'un Date avec fuseau horaire explicite -04:00 (Montréal heure d'été)
-    const localISOString = `${date}T${heure}:00-04:00`
-    const debut = new Date(localISOString)
+    // Construire la date sans ajustement de fuseau horaire
+    const localTimeStr = `${date}T${heure}`
+    const debut = new Date(localTimeStr)
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { data, error } = await supabase.from('seances').insert({
