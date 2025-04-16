@@ -1,6 +1,7 @@
+// Fichier : app/dashboard/tuteur/horaire/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useUser } from '@supabase/auth-helpers-react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import format from 'date-fns/format';
@@ -19,7 +20,9 @@ export default function DashboardTuteur() {
   const [seances, setSeances] = useState<any[]>([]);
   const [newSeance, setNewSeance] = useState({ date: '', heure: '', duree: '', recurrence: 1 });
   const [selectedEleveId, setSelectedEleveId] = useState('');
-  const [selectedSeance, setSelectedSeance] = useState<any>(null);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const [selectedSeance, setSelectedSeance] = useState<any | null>(null);
+  const calendarRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -111,6 +114,12 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
+  const handleSelectEvent = (event: any, e: any) => {
+    e.preventDefault();
+    setSelectedSeance(event);
+    setPopupPosition({ x: e.clientX, y: e.clientY });
+  };
+
   const defaultMin = new Date();
   defaultMin.setHours(6, 0, 0, 0);
   const defaultMax = new Date();
@@ -123,7 +132,7 @@ export default function DashboardTuteur() {
   const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
 
   return (
-    <div className="p-4">
+    <div className="p-4 relative">
       <h1 className="text-xl font-bold mb-4">Ajouter une séance</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <select onChange={e => setSelectedEleveId(e.target.value)} className="p-2 border rounded">
@@ -153,13 +162,16 @@ export default function DashboardTuteur() {
         min={minTime}
         max={maxTime}
         scrollToTime={minTime}
-        onSelectEvent={(event) => setSelectedSeance(event)}
+        onSelectEvent={handleSelectEvent}
       />
 
-      {selectedSeance && (
-        <div className="fixed top-1/2 left-1/2 z-50 bg-white border shadow-xl rounded-lg p-4 transform -translate-x-1/2 -translate-y-1/2 w-[300px]">
-          <h3 className="text-lg font-bold mb-2">{selectedSeance.eleve_nom}</h3>
-          <p className="text-sm mb-4">🕒 {new Date(selectedSeance.start).toLocaleTimeString()} à {new Date(selectedSeance.end).toLocaleTimeString()}</p>
+      {selectedSeance && popupPosition && (
+        <div
+          className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
+          style={{ top: popupPosition.y + 10, left: popupPosition.x + 10 }}
+        >
+          <h3 className="text-md font-bold mb-1">{selectedSeance.eleve_nom}</h3>
+          <p className="text-sm mb-2">🕒 {new Date(selectedSeance.start).toLocaleTimeString()} à {new Date(selectedSeance.end).toLocaleTimeString()}</p>
           <div className="flex flex-wrap gap-2">
             <button onClick={() => window.open(selectedSeance.lien, '_blank')} className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
             <button onClick={() => handleDeleteSeanceDirect(selectedSeance.id)} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
