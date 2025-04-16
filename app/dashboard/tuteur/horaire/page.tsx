@@ -20,6 +20,7 @@ export default function DashboardTuteur() {
   const [seances, setSeances] = useState<any[]>([]);
   const [newSeance, setNewSeance] = useState({ date: '', heure: '', duree: '', recurrence: 1 });
   const [selectedEleveId, setSelectedEleveId] = useState('');
+  const [modalSeance, setModalSeance] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -43,7 +44,7 @@ export default function DashboardTuteur() {
       return;
     }
 
-    const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
+    const eleve = eleves.find(e => e.id === selectedEleveId);
     if (!eleve?.lien_lessonspace) {
       alert("Le lien Lessonspace de l'élève est manquant.");
       return;
@@ -70,7 +71,7 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
-  const handleDeleteSeanceDirect = async (id: string) => {
+  const handleDeleteSeance = async (id: string) => {
     await fetch(`/api/seances`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -80,7 +81,7 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
-  const handleCompleterSeanceDirect = async (event: any) => {
+  const handleCompleterSeance = async (event: any) => {
     const dureeReelle = prompt("Durée réelle (en minutes):");
     if (!dureeReelle || isNaN(Number(dureeReelle))) return;
 
@@ -111,20 +112,6 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
-  const EventComponent = ({ event }: any) => (
-    <div className="flex flex-col space-y-1">
-      <div className="font-bold">{event.eleve_nom}</div>
-      <div className="text-xs">{event.sujet || 'Séance'}</div>
-      <div className="flex gap-1 mt-1">
-        <button onClick={() => window.open(event.lien, '_blank')} className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded">Accéder</button>
-        <button onClick={() => handleDeleteSeanceDirect(event.id)} className="bg-red-500 text-white text-xs px-2 py-0.5 rounded">Suppr.</button>
-        {!event.completee && event.accedee && (
-          <button onClick={() => handleCompleterSeanceDirect(event)} className="bg-green-500 text-white text-xs px-2 py-0.5 rounded">Compl.</button>
-        )}
-      </div>
-    </div>
-  );
-
   const defaultMin = new Date();
   defaultMin.setHours(6, 0, 0, 0);
   const defaultMax = new Date();
@@ -132,7 +119,6 @@ export default function DashboardTuteur() {
 
   const allStarts = seances.map(s => new Date(s.debut));
   const allEnds = seances.map(s => new Date(s.fin));
-
   const minTime = allStarts.length ? new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime()))) : defaultMin;
   const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
 
@@ -155,7 +141,7 @@ export default function DashboardTuteur() {
         localizer={localizer}
         events={seances.map(s => ({
           id: s.id,
-          title: s.sujet || 'Séance',
+          title: s.eleve_nom || 'Séance',
           start: new Date(s.debut),
           end: new Date(s.fin),
           ...s
@@ -164,11 +150,28 @@ export default function DashboardTuteur() {
         endAccessor="end"
         style={{ height: 'calc(100vh - 250px)' }}
         defaultView={Views.WEEK}
-        components={{ event: EventComponent }}
         min={minTime}
         max={maxTime}
         scrollToTime={minTime}
+        onSelectEvent={event => setModalSeance(event)}
       />
+
+      {modalSeance && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded shadow-lg w-96">
+            <h3 className="font-bold text-lg mb-2">{modalSeance.eleve_nom}</h3>
+            <p className="text-sm mb-2">⏰ {format(new Date(modalSeance.start), 'HH:mm')} à {format(new Date(modalSeance.end), 'HH:mm')}</p>
+            <div className="flex gap-2">
+              <button onClick={() => window.open(modalSeance.lien, '_blank')} className="bg-blue-600 text-white px-3 py-1 rounded">Accéder</button>
+              <button onClick={() => handleDeleteSeance(modalSeance.id)} className="bg-red-600 text-white px-3 py-1 rounded">Supprimer</button>
+              {!modalSeance.completee && modalSeance.accedee && (
+                <button onClick={() => handleCompleterSeance(modalSeance)} className="bg-green-600 text-white px-3 py-1 rounded">Compléter</button>
+              )}
+            </div>
+            <button onClick={() => setModalSeance(null)} className="mt-4 text-sm text-gray-500 hover:underline">Fermer</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
