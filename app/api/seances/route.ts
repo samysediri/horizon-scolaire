@@ -7,25 +7,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function localToUTC(dateStr: string, timeStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const localDate = new Date(year, month - 1, day, hours, minutes);
+  return localDate.toISOString();
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-
     const { tuteur_id, eleve_id, date, heure, duree, lien_lessonspace, eleve_nom } = body
 
     if (!tuteur_id || !eleve_id || !date || !heure || !duree || !lien_lessonspace) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    const localTimeStr = `${date}T${heure}`
-    const debut = new Date(localTimeStr)
-    const fin = new Date(debut.getTime() + Number(duree) * 60000)
+    const debutISO = localToUTC(date, heure)
+    const finISO = new Date(new Date(debutISO).getTime() + Number(duree) * 60000).toISOString()
 
     const { data, error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: debut.toISOString(),
-      fin: fin.toISOString(),
+      debut: debutISO,
+      fin: finISO,
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
