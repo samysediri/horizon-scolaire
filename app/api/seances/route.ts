@@ -17,18 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    // Conversion locale (Montréal) vers UTC
-    const localTimeStr = `${date}T${heure}`
-    const localTime = new Date(localTimeStr)
-    const timezoneOffset = localTime.getTimezoneOffset() // minutes
-    const debutUTC = new Date(localTime.getTime() - timezoneOffset * 60000)
-    const finUTC = new Date(debutUTC.getTime() + Number(duree) * 60000)
+    // Création d'un Date avec fuseau horaire explicite -04:00 (Montréal heure d'été)
+    const localISOString = `${date}T${heure}:00-04:00`
+    const debut = new Date(localISOString)
+    const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { data, error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: debutUTC.toISOString(),
-      fin: finUTC.toISOString(),
+      debut: debut.toISOString(),
+      fin: fin.toISOString(),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
