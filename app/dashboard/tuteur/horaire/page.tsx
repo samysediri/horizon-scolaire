@@ -125,10 +125,16 @@ export default function DashboardTuteur() {
     </div>
   );
 
-  const defaultMin = new Date(0, 0, 0, 6, 0);
-  const defaultMax = new Date(0, 0, 0, 22, 0);
-  const minTime = seances.length > 0 ? seances.reduce((min, s) => new Date(s.debut) < min ? new Date(s.debut) : min, defaultMin) : defaultMin;
-  const maxTime = seances.length > 0 ? seances.reduce((max, s) => new Date(s.fin) > max ? new Date(s.fin) : max, defaultMax) : defaultMax;
+  const defaultMin = new Date();
+  defaultMin.setHours(6, 0, 0, 0);
+  const defaultMax = new Date();
+  defaultMax.setHours(22, 0, 0, 0);
+
+  const allStarts = seances.map(s => new Date(s.debut));
+  const allEnds = seances.map(s => new Date(s.fin));
+
+  const minTime = allStarts.length ? new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime()))) : defaultMin;
+  const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
 
   return (
     <div className="p-4">
