@@ -3,45 +3,42 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { differenceInYears, parseISO } from 'date-fns'
 
 export default function DashboardEleve() {
+  const [user, setUser] = useState(null)
   const [eleve, setEleve] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const fetchEleve = async () => {
-      const {
-        data: { user },
-        error: userError
-      } = await supabase.auth.getUser()
+    async function fetchEleve() {
+      const { data: { user }, error } = await supabase.auth.getUser()
 
-      if (userError || !user) {
-        console.error("❌ Impossible d'obtenir l'utilisateur :", userError)
+      if (error || !user) {
+        console.error("Erreur utilisateur:", error)
         router.push('/login')
         return
       }
 
-      console.log("🧠 ID utilisateur :", user.id)
+      setUser(user)
 
-      const { data, error } = await supabase
+      const { data, error: eleveError } = await supabase
         .from('eleves')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', user.id)  // IMPORTANT : on cherche par l'ID du profil Supabase
+        .maybeSingle()
 
-      if (error) {
-        console.error("❌ Erreur Supabase :", error)
+      if (eleveError) {
+        console.error('Erreur chargement fiche élève:', eleveError)
         return
       }
 
-      if (!data || data.length === 0) {
-        console.warn("⚠️ Aucun élève trouvé avec cet ID :", user.id)
-        return
+      if (!data) {
+        console.warn('Aucun élève trouvé avec cet ID :', user.id)
       }
 
-      setEleve(data[0])
+      setEleve(data)
       setLoading(false)
     }
 
@@ -49,24 +46,18 @@ export default function DashboardEleve() {
   }, [])
 
   if (loading) {
-    return <p className="p-6 text-gray-600">Chargement de l’utilisateur...</p>
+    return <p>Chargement de l’utilisateur...</p>
+  }
+
+  if (!eleve) {
+    return <p className="text-red-500">Aucun profil élève trouvé pour cet utilisateur.</p>
   }
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Fiche de {eleve.prenom} {eleve.nom}</h1>
-      <div className="space-y-2 text-gray-800">
-        <p><strong>Courriel de l’élève :</strong> {eleve.email}</p>
-        <p><strong>Courriel du parent :</strong> {eleve.parent_email}</p>
-        <p><strong>Téléphone du parent :</strong> {eleve.parent_telephone}</p>
-        <p><strong>Âge :</strong> {eleve.date_naissance
-          ? differenceInYears(new Date(), parseISO(eleve.date_naissance)) + " ans"
-          : "N/A"}</p>
-        <p><strong>Besoins spécifiques :</strong></p>
-        <p className="ml-4 text-gray-700 italic">
-          {eleve.besoins || "Aucun besoin particulier spécifié."}
-        </p>
-      </div>
+      <h2 className="text-2xl font-bold mb-4">Bienvenue, {eleve.prenom} {eleve.nom}</h2>
+      <p>Email: {eleve.email}</p>
+      <p>Lien Lessonspace: <a href={eleve.lien_lessonspace} className="text-blue-600 underline">{eleve.lien_lessonspace}</a></p>
     </div>
   )
 }
