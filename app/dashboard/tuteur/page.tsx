@@ -1,11 +1,14 @@
 'use client';
 
-import { useUser } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function TuteurDashboard() {
   const user = useUser();
+  const supabase = useSupabaseClient();
+  const router = useRouter();
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -22,8 +25,8 @@ export default function TuteurDashboard() {
   }, [user]);
 
   const handleLogout = async () => {
-    await fetch('/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
+    await supabase.auth.signOut();
+    router.push('/login');
   };
 
   if (!ready) return null;
