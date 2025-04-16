@@ -130,8 +130,9 @@ export default function DashboardTuteur() {
   const defaultMax = new Date();
   defaultMax.setHours(22, 0, 0, 0);
 
-  const allStarts = seances.map(s => new Date(s.debut));
-  const allEnds = seances.map(s => new Date(s.fin));
+  const offset = new Date().getTimezoneOffset() * -60000;
+  const allStarts = seances.map(s => new Date(new Date(s.debut).getTime() + offset));
+  const allEnds = seances.map(s => new Date(new Date(s.fin).getTime() + offset));
 
   const minTime = allStarts.length ? new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime()))) : defaultMin;
   const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
@@ -156,8 +157,8 @@ export default function DashboardTuteur() {
         events={seances.map(s => ({
           id: s.id,
           title: s.sujet || 'Séance',
-          start: new Date(s.debut),
-          end: new Date(s.fin),
+          start: new Date(new Date(s.debut).getTime() + offset),
+          end: new Date(new Date(s.fin).getTime() + offset),
           ...s
         }))}
         startAccessor="start"
