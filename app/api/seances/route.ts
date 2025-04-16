@@ -17,17 +17,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    // ✅ Création en heure locale (évite UTC implicite)
     const [year, month, day] = date.split('-').map(Number)
     const [hours, minutes] = heure.split(':').map(Number)
+
+    // Création de la date locale
     const debut = new Date(year, month - 1, day, hours, minutes)
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
-    const { data, error } = await supabase.from('seances').insert({
+    // Format YYYY-MM-DD HH:mm:ss (ex: 2024-04-18 16:49:00)
+    const toPostgresTimestamp = (d: Date) =>
+      d.toLocaleString('sv-SE').replace(' ', 'T')  // format ISO sans Z
+
+    const { error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: debut.toISOString(),
-      fin: fin.toISOString(),
+      debut: toPostgresTimestamp(debut),
+      fin: toPostgresTimestamp(fin),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
