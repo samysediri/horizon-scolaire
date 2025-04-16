@@ -24,17 +24,11 @@ export default function DashboardTuteur() {
   const [selectedSeance, setSelectedSeance] = useState<any>(null);
 
   useEffect(() => {
-    if (!user) {
-      console.log('[Client] Utilisateur pas encore chargé...');
-      return;
-    }
+    if (!user) return;
 
     const fetchData = async () => {
-      console.log('[Client] Utilisateur détecté :', user.id);
-
       const elevesRes = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
       const elevesData = await elevesRes.json();
-      console.log('[DEBUG] Élèves reçus :', elevesData);
       setEleves(elevesData || []);
 
       const seancesRes = await fetch(`/api/seances?tuteur_id=${user.id}`);
@@ -53,11 +47,8 @@ export default function DashboardTuteur() {
 
     try {
       const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
-      console.log('[DEBUG] ID élève sélectionné :', selectedEleveId);
-      console.log('[DEBUG] Élève trouvé :', eleve);
-
       if (!eleve?.lien_lessonspace) {
-        alert("Le lien Lessonspace de l'élève est manquant. Ajoutez-le dans Supabase.");
+        alert("Le lien Lessonspace de l'élève est manquant.");
         return;
       }
 
@@ -81,7 +72,7 @@ export default function DashboardTuteur() {
       alert('Séance ajoutée!');
       location.reload();
     } catch (err: any) {
-      alert("Erreur inattendue : " + err.message);
+      alert("Erreur : " + err.message);
     }
   };
 
@@ -101,7 +92,7 @@ export default function DashboardTuteur() {
   };
 
   const handleCompleterSeance = async () => {
-    const dureeReelle = prompt("Entrez la durée réelle (en minutes):");
+    const dureeReelle = prompt("Durée réelle (min) :");
     if (!dureeReelle || isNaN(Number(dureeReelle))) return;
 
     try {
@@ -128,10 +119,10 @@ export default function DashboardTuteur() {
         })
       });
 
-      alert("Séance complétée avec enregistrement!");
+      alert("Séance complétée!");
       location.reload();
     } catch (err: any) {
-      alert("Erreur inattendue : " + err.message);
+      alert("Erreur : " + err.message);
     }
   };
 
@@ -148,6 +139,12 @@ export default function DashboardTuteur() {
     window.open(selectedSeance.lien, '_blank');
     location.reload();
   };
+
+  // Déterminer les bornes horaires (min et max)
+  const defaultMin = new Date(0, 0, 0, 6, 0);
+  const defaultMax = new Date(0, 0, 0, 22, 0);
+  const minTime = seances.length > 0 ? seances.reduce((min, s) => new Date(s.debut) < min ? new Date(s.debut) : min, defaultMin) : defaultMin;
+  const maxTime = seances.length > 0 ? seances.reduce((max, s) => new Date(s.fin) > max ? new Date(s.fin) : max, defaultMax) : defaultMax;
 
   return (
     <div className="p-4">
@@ -175,9 +172,12 @@ export default function DashboardTuteur() {
         }))}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 500 }}
-        onSelectEvent={handleSelectEvent}
+        style={{ height: 'calc(100vh - 250px)' }}
         defaultView={Views.WEEK}
+        onSelectEvent={handleSelectEvent}
+        min={minTime}
+        max={maxTime}
+        scrollToTime={minTime}
       />
 
       {selectedSeance && (
