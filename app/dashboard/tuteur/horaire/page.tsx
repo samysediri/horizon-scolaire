@@ -114,6 +114,11 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
+  const handleLogout = async () => {
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  };
+
   const handleSelectEvent = (event: any, e: any) => {
     e.preventDefault();
     setSelectedSeance(event);
@@ -133,7 +138,11 @@ export default function DashboardTuteur() {
 
   return (
     <div className="p-4 relative">
-      <h1 className="text-xl font-bold mb-4">Ajouter une séance</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">Ajouter une séance</h1>
+        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Déconnexion</button>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <select onChange={e => setSelectedEleveId(e.target.value)} className="p-2 border rounded">
           <option value=''>Sélectionner un élève</option>
