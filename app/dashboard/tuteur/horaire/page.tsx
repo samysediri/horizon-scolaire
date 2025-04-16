@@ -8,7 +8,6 @@ import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
-import addMinutes from 'date-fns/addMinutes';
 import fr from 'date-fns/locale/fr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
@@ -21,7 +20,6 @@ export default function DashboardTuteur() {
   const [seances, setSeances] = useState<any[]>([]);
   const [newSeance, setNewSeance] = useState({ date: '', heure: '', duree: '', recurrence: 1 });
   const [selectedEleveId, setSelectedEleveId] = useState('');
-  const [selectedSeance, setSelectedSeance] = useState<any>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -45,102 +43,88 @@ export default function DashboardTuteur() {
       return;
     }
 
-    try {
-      const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
-      if (!eleve?.lien_lessonspace) {
-        alert("Le lien Lessonspace de l'élève est manquant.");
-        return;
-      }
-
-      const res = await fetch('/api/seances', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tuteur_id: user?.id,
-          eleve_id: selectedEleveId,
-          date: newSeance.date,
-          heure: newSeance.heure,
-          duree: newSeance.duree,
-          lien_lessonspace: eleve.lien_lessonspace,
-          eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Erreur');
-
-      alert('Séance ajoutée!');
-      location.reload();
-    } catch (err: any) {
-      alert("Erreur : " + err.message);
+    const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
+    if (!eleve?.lien_lessonspace) {
+      alert("Le lien Lessonspace de l'élève est manquant.");
+      return;
     }
+
+    const res = await fetch('/api/seances', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tuteur_id: user?.id,
+        eleve_id: selectedEleveId,
+        date: newSeance.date,
+        heure: newSeance.heure,
+        duree: newSeance.duree,
+        lien_lessonspace: eleve.lien_lessonspace,
+        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'Erreur');
+
+    alert('Séance ajoutée!');
+    location.reload();
   };
 
-  const handleSelectEvent = (event: any) => {
-    setSelectedSeance(event);
-  };
-
-  const handleDeleteSeance = async () => {
-    if (!selectedSeance?.id) return;
+  const handleDeleteSeanceDirect = async (id: string) => {
     await fetch(`/api/seances`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: selectedSeance.id })
+      body: JSON.stringify({ id })
     });
     alert('Séance supprimée');
     location.reload();
   };
 
-  const handleCompleterSeance = async () => {
-    const dureeReelle = prompt("Durée réelle (min) :");
+  const handleCompleterSeanceDirect = async (event: any) => {
+    const dureeReelle = prompt("Durée réelle (en minutes):");
     if (!dureeReelle || isNaN(Number(dureeReelle))) return;
 
-    try {
-      const response = await fetch('/api/lessonspace/replay', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ space_id: selectedSeance.lien?.split('/').pop() })
-      });
+    const response = await fetch('/api/lessonspace/replay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ space_id: event.lien?.split('/').pop() })
+    });
 
-      const data = await response.json();
-      if (!response.ok || !data.replay_url) {
-        alert(`Erreur Lessonspace : ${response.status} - ${JSON.stringify(data)}`);
-        return;
-      }
-
-      await fetch(`/api/seances`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedSeance.id,
-          completee: true,
-          duree_reelle: parseInt(dureeReelle),
-          lien_revoir: data.replay_url
-        })
-      });
-
-      alert("Séance complétée!");
-      location.reload();
-    } catch (err: any) {
-      alert("Erreur : " + err.message);
+    const data = await response.json();
+    if (!response.ok || !data.replay_url) {
+      alert(`Erreur Lessonspace : ${response.status} - ${JSON.stringify(data)}`);
+      return;
     }
-  };
 
-  const handleAccederSeance = async () => {
-    if (!selectedSeance?.id) return;
     await fetch(`/api/seances`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id: selectedSeance.id,
-        accedee: true
+        id: event.id,
+        completee: true,
+        duree_reelle: parseInt(dureeReelle),
+        lien_revoir: data.replay_url
       })
     });
-    window.open(selectedSeance.lien, '_blank');
+
+    alert("Séance complétée!");
     location.reload();
   };
 
-  // Déterminer les bornes horaires (min et max)
+  const EventComponent = ({ event }: any) => (
+    <div className="flex flex-col space-y-1">
+      <div className="font-bold">{event.eleve_nom}</div>
+      <div className="text-xs">{event.sujet || 'Séance'}</div>
+      <div className="flex gap-1 mt-1">
+        <button onClick={() => window.open(event.lien, '_blank')} className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded">Accéder</button>
+        <button onClick={() => handleDeleteSeanceDirect(event.id)} className="bg-red-500 text-white text-xs px-2 py-0.5 rounded">Suppr.</button>
+        {!event.completee && event.accedee && (
+          <button onClick={() => handleCompleterSeanceDirect(event)} className="bg-green-500 text-white text-xs px-2 py-0.5 rounded">Compl.</button>
+        )}
+      </div>
+    </div>
+  );
+
   const defaultMin = new Date(0, 0, 0, 6, 0);
   const defaultMax = new Date(0, 0, 0, 22, 0);
   const minTime = seances.length > 0 ? seances.reduce((min, s) => new Date(s.debut) < min ? new Date(s.debut) : min, defaultMin) : defaultMin;
@@ -174,33 +158,11 @@ export default function DashboardTuteur() {
         endAccessor="end"
         style={{ height: 'calc(100vh - 250px)' }}
         defaultView={Views.WEEK}
-        onSelectEvent={handleSelectEvent}
+        components={{ event: EventComponent }}
         min={minTime}
         max={maxTime}
         scrollToTime={minTime}
       />
-
-      {selectedSeance && (
-        <div className="mt-4 border p-4 rounded bg-gray-50">
-          <h3 className="font-bold mb-2">Séance sélectionnée</h3>
-          <div className="flex flex-wrap gap-2">
-            {!selectedSeance.completee && (
-              <>
-                <button onClick={handleAccederSeance} className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
-                {selectedSeance.accedee && (
-                  <button onClick={handleCompleterSeance} className="bg-green-500 text-white px-3 py-1 rounded">Compléter</button>
-                )}
-                <button onClick={handleDeleteSeance} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
-              </>
-            )}
-            {selectedSeance.accedee && selectedSeance.completee && selectedSeance.lien_revoir && (
-              <a href={selectedSeance.lien_revoir} target="_blank" rel="noreferrer">
-                <button className="bg-purple-500 text-white px-3 py-1 rounded">Revoir</button>
-              </a>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
