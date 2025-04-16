@@ -1,4 +1,3 @@
-// Fichier : app/api/seances/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -7,11 +6,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Formate une Date JS vers le format "YYYY-MM-DD HH:MM:SS" en heure locale
-function formatLocalDateTime(date: Date) {
+function toPostgresLocalTimestamp(date: Date): string {
   const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-         `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hour = pad(date.getHours())
+  const minute = pad(date.getMinutes())
+  const second = pad(date.getSeconds())
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`
 }
 
 export async function POST(req: NextRequest) {
@@ -24,15 +27,15 @@ export async function POST(req: NextRequest) {
     }
 
     const [year, month, day] = date.split('-').map(Number)
-    const [hours, minutes] = heure.split(':').map(Number)
-    const debut = new Date(year, month - 1, day, hours, minutes)
+    const [h, m] = heure.split(':').map(Number)
+    const debut = new Date(year, month - 1, day, h, m)
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: formatLocalDateTime(debut),  // 👈 format local explicite
-      fin: formatLocalDateTime(fin),
+      debut: toPostgresLocalTimestamp(debut), // ← Format sans fuseau
+      fin: toPostgresLocalTimestamp(fin),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
