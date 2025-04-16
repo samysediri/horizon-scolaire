@@ -1,44 +1,30 @@
 'use client';
 
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
-import format from 'date-fns/format';
-import parse from 'date-fns/parse';
-import startOfWeek from 'date-fns/startOfWeek';
-import getDay from 'date-fns/getDay';
-import fr from 'date-fns/locale/fr';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-
-const locales = { fr };
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
 export default function DashboardEleve() {
-  const [user, setUser] = useState(null);
-  const [eleve, setEleve] = useState(null);
-  const [seances, setSeances] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [debug, setDebug] = useState('Démarrage...');
+  const user = useUser();
+  const supabase = useSupabaseClient();
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const [eleve, setEleve] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [debug, setDebug] = useState('Chargement...');
 
   useEffect(() => {
     const fetchData = async () => {
-      setDebug('Etape 1 : récupération utilisateur...');
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      setDebug('🔄 Vérification utilisateur...');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        setDebug(`Erreur utilisateur : ${userError?.message || 'non connecté'}`);
+        setDebug(`❌ Utilisateur non connecté : ${userError?.message || ''}`);
         router.push('/login');
         return;
       }
 
-      setUser(user);
-      setDebug(`Etape 2 : utilisateur détecté : ${user.id}`);
+      setDebug(`✅ Utilisateur ID : ${user.id}`);
 
       const { data: profil, error: profilError } = await supabase
         .from('eleves')
@@ -46,67 +32,42 @@ export default function DashboardEleve() {
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profilError || !profil) {
-        setDebug(`Erreur ou profil introuvable : ${profilError?.message || 'aucun profil'}`);
+      if (profilError) {
+        setDebug(`❌ Erreur chargement élève : ${profilError.message}`);
+        return;
+      }
+
+      if (!profil) {
+        setDebug(`❌ Aucun élève trouvé pour l'ID : ${user.id}`);
         return;
       }
 
       setEleve(profil);
-
-      const { data: seancesData, error: seanceErr } = await supabase
-        .from('seances')
-        .select('*')
-        .eq('eleve_id', user.id);
-
-      if (seanceErr) {
-        setDebug(`Erreur chargement séances : ${seanceErr.message}`);
-        return;
-      }
-
-      setSeances(seancesData || []);
-      setDebug('Données chargées avec succès!');
+      setDebug('🎉 Élève chargé');
       setLoading(false);
     };
 
     fetchData();
-  }, []);
+  }, [supabase, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
   };
 
-  if (loading) return <p>{debug}</p>;
-  if (!eleve) return <p>{debug}</p>;
+  if (loading) return <p className="p-6 text-gray-500">{debug}</p>;
+  if (!eleve) return <p className="p-6 text-red-500">{debug}</p>;
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        Bienvenue {eleve.prenom} {eleve.nom}
-      </h1>
+      <h1 className="text-2xl font-bold mb-4">Bienvenue {eleve.prenom} {eleve.nom}</h1>
       <p className="mb-2">📧 {eleve.email}</p>
-      <p className="mb-2">
-        🎯 Lien Lessonspace :{' '}
-        <a className="text-blue-600 underline" href={eleve.lien_lessonspace}>
-          {eleve.lien_lessonspace}
-        </a>
-      </p>
+      <p className="mb-2">🎯 Lien Lessonspace : <a href={eleve.lien_lessonspace} className="text-blue-600 underline">{eleve.lien_lessonspace}</a></p>
 
-      <h2 className="text-lg font-semibold mt-8 mb-2">Mon horaire</h2>
-      <div className="border rounded p-4 bg-white">
-        <Calendar
-          localizer={localizer}
-          events={seances.map((s: any) => ({
-            id: s.id,
-            title: s.sujet || 'Séance',
-            start: new Date(s.debut),
-            end: new Date(s.fin),
-          }))}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: 500 }}
-          defaultView={Views.WEEK}
-        />
+      <div className="mt-6">
+        <Link href="/dashboard/eleve/horaire" className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+          🗓️ Voir mon horaire
+        </Link>
       </div>
 
       <button
