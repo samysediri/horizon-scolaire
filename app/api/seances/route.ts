@@ -17,7 +17,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    // Construire la date sans ajustement de fuseau horaire
     const localTimeStr = `${date}T${heure}`
     const debut = new Date(localTimeStr)
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
@@ -61,4 +60,25 @@ export async function DELETE(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 })
   }
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const tuteur_id = searchParams.get('tuteur_id')
+
+  if (!tuteur_id) {
+    return NextResponse.json({ error: 'Paramètre tuteur_id manquant' }, { status: 400 })
+  }
+
+  const { data, error } = await supabase
+    .from('seances')
+    .select('*')
+    .eq('tuteur_id', tuteur_id)
+
+  if (error) {
+    console.error('[API] Erreur récupération séances:', error.message)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json(data)
 }
