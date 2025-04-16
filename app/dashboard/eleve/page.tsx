@@ -12,52 +12,48 @@ export default function DashboardEleve() {
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    async function fetchEleve() {
-      const { data: { user }, error } = await supabase.auth.getUser()
+    const fetchData = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-      if (error || !user) {
-        console.error("Erreur utilisateur:", error)
+      if (userError || !user) {
+        console.warn('Utilisateur non connecté')
         router.push('/login')
         return
       }
 
       setUser(user)
 
-      const { data, error: eleveError } = await supabase
+      const { data: profil, error: profilError } = await supabase
         .from('eleves')
         .select('*')
-        .eq('id', user.id)  // IMPORTANT : on cherche par l'ID du profil Supabase
+        .eq('id', user.id)
         .maybeSingle()
 
-      if (eleveError) {
-        console.error('Erreur chargement fiche élève:', eleveError)
+      if (profilError) {
+        console.error('Erreur chargement fiche élève:', profilError.message)
         return
       }
 
-      if (!data) {
-        console.warn('Aucun élève trouvé avec cet ID :', user.id)
+      if (!profil) {
+        console.warn('Aucun profil élève trouvé pour cet utilisateur.')
+        return
       }
 
-      setEleve(data)
+      setEleve(profil)
       setLoading(false)
     }
 
-    fetchEleve()
+    fetchData()
   }, [])
 
-  if (loading) {
-    return <p>Chargement de l’utilisateur...</p>
-  }
-
-  if (!eleve) {
-    return <p className="text-red-500">Aucun profil élève trouvé pour cet utilisateur.</p>
-  }
+  if (loading) return <p>Chargement de l’utilisateur...</p>
+  if (!eleve) return <p>Aucun profil élève trouvé pour cet utilisateur.</p>
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Bienvenue, {eleve.prenom} {eleve.nom}</h2>
-      <p>Email: {eleve.email}</p>
-      <p>Lien Lessonspace: <a href={eleve.lien_lessonspace} className="text-blue-600 underline">{eleve.lien_lessonspace}</a></p>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Bienvenue {eleve.prenom} {eleve.nom}</h1>
+      <p className="mb-2">📧 {eleve.email}</p>
+      <p className="mb-2">🎯 Lien Lessonspace : <a className="text-blue-600 underline" href={eleve.lien_lessonspace}>{eleve.lien_lessonspace}</a></p>
     </div>
   )
 }
