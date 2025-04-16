@@ -1,21 +1,12 @@
+// Fichier : app/api/seances/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { zonedTimeToUtc } from 'date-fns-tz'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-function toPostgresLocalTimestamp(date: Date): string {
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  const year = date.getFullYear()
-  const month = pad(date.getMonth() + 1)
-  const day = pad(date.getDate())
-  const hour = pad(date.getHours())
-  const minute = pad(date.getMinutes())
-  const second = pad(date.getSeconds())
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,16 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    const [year, month, day] = date.split('-').map(Number)
-    const [h, m] = heure.split(':').map(Number)
-    const debut = new Date(year, month - 1, day, h, m)
+    // Combine date et heure dans le fuseau horaire de Montréal
+    const localDateTime = `${date}T${heure}:00`
+    const debut = zonedTimeToUtc(localDateTime, 'America/Toronto')
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: toPostgresLocalTimestamp(debut), // ← Format sans fuseau
-      fin: toPostgresLocalTimestamp(fin),
+      debut: debut.toISOString(),
+      fin: fin.toISOString(),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
