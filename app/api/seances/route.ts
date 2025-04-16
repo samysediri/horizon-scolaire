@@ -7,30 +7,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-function localToUTC(dateStr: string, timeStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const localDate = new Date(year, month - 1, day, hours, minutes);
-  return localDate.toISOString();
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+
     const { tuteur_id, eleve_id, date, heure, duree, lien_lessonspace, eleve_nom } = body
 
     if (!tuteur_id || !eleve_id || !date || !heure || !duree || !lien_lessonspace) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    const debutISO = localToUTC(date, heure)
-    const finISO = new Date(new Date(debutISO).getTime() + Number(duree) * 60000).toISOString()
+    // ✅ Création en heure locale (évite UTC implicite)
+    const [year, month, day] = date.split('-').map(Number)
+    const [hours, minutes] = heure.split(':').map(Number)
+    const debut = new Date(year, month - 1, day, hours, minutes)
+    const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { data, error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
-      debut: debutISO,
-      fin: finISO,
+      debut: debut.toISOString(),
+      fin: fin.toISOString(),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
       eleve_nom
