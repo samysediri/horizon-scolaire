@@ -65,24 +65,26 @@ export default function HoraireEleve() {
   return (
     <div className="p-6 relative">
       <h1 className="text-2xl font-bold mb-4">🗓️ Mon horaire</h1>
-      <Calendar
-        localizer={localizer}
-        events={seances.map(s => ({
-          id: s.id,
-          title: s.sujet || 'Séance',
-          start: new Date(s.debut),
-          end: new Date(s.fin),
-          ...s
-        }))}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 'calc(100vh - 40px)', fontSize: '0.65rem' }}
-        defaultView={Views.WEEK}
-        min={minTime}
-        max={maxTime}
-        scrollToTime={minTime}
-        onSelectEvent={handleSelectEvent}
-      />
+      <div className="h-[50vh]">
+        <Calendar
+          localizer={localizer}
+          events={seances.map(s => ({
+            id: s.id,
+            title: s.sujet || 'Séance',
+            start: new Date(s.debut),
+            end: new Date(s.fin),
+            ...s
+          }))}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: '100%', fontSize: '0.65rem' }}
+          defaultView={Views.WEEK}
+          min={minTime}
+          max={maxTime}
+          scrollToTime={minTime}
+          onSelectEvent={handleSelectEvent}
+        />
+      </div>
 
       {popup && (
         <div
