@@ -65,7 +65,7 @@ export default function HoraireEleve() {
   return (
     <div className="p-6 relative">
       <h1 className="text-2xl font-bold mb-4">🗓️ Mon horaire</h1>
-      <div className="h-[50vh]">
+      <div className="h-[40vh]">
         <Calendar
           localizer={localizer}
           events={seances.map(s => ({
@@ -77,7 +77,7 @@ export default function HoraireEleve() {
           }))}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: '100%', fontSize: '0.65rem' }}
+          style={{ height: '100%', fontSize: '0.5rem' }}
           defaultView={Views.WEEK}
           min={minTime}
           max={maxTime}
