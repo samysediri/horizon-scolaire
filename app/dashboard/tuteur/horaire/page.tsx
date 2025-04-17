@@ -45,13 +45,10 @@ export default function HoraireTuteur() {
     }
 
     const eleve = eleves.find(e => e.id === selectedEleveId);
-    if (!eleve) {
-      alert("Élève introuvable.");
+    if (!eleve || !eleve.lien_lessonspace) {
+      alert("Élève introuvable ou lien Lessonspace manquant.");
       return;
     }
-
-    const lien_tuteur = eleve.lien_lessonspace;
-    const lien_eleve = eleve.lien_lessonspace;
 
     const res = await fetch('/api/seances', {
       method: 'POST',
@@ -63,8 +60,8 @@ export default function HoraireTuteur() {
         heure: newSeance.heure,
         duree: newSeance.duree,
         eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
-        lien_tuteur,
-        lien_eleve
+        lien_tuteur: eleve.lien_lessonspace,
+        lien_eleve: eleve.lien_lessonspace
       })
     });
 
