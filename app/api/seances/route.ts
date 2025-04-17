@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       duree_minutes: Number(duree),
       eleve_nom,
       lien_tuteur,
-      lien_eleve
+      lien_eleve,
     });
 
     if (error) {
