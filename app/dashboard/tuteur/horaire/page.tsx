@@ -1,5 +1,4 @@
-// Fichier : app/dashboard/tuteur/horaire/page.tsx
-"use client";
+'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useUser } from '@supabase/auth-helpers-react';
@@ -47,8 +46,24 @@ export default function DashboardTuteur() {
     }
 
     const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
-    if (!eleve?.lien_lessonspace) {
-      alert("Le lien Lessonspace de l'élève est manquant.");
+    if (!eleve) {
+      alert("Élève introuvable.");
+      return;
+    }
+
+    const lessonspaceRes = await fetch('/api/lessonspace/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nom_eleve: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
+        nom_tuteur: user?.user_metadata?.full_name || 'Tuteur inconnu',
+      })
+    });
+
+    const lessonspaceData = await lessonspaceRes.json();
+
+    if (!lessonspaceRes.ok || !lessonspaceData?.url_tuteur || !lessonspaceData?.url_eleve) {
+      alert("Erreur lors de la création de la salle Lessonspace");
       return;
     }
 
@@ -61,7 +76,8 @@ export default function DashboardTuteur() {
         date: newSeance.date,
         heure: newSeance.heure,
         duree: newSeance.duree,
-        lien_lessonspace: eleve.lien_lessonspace,
+        lien_tuteur: lessonspaceData.url_tuteur,
+        lien_eleve: lessonspaceData.url_eleve,
         eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
       })
     });
@@ -182,7 +198,7 @@ export default function DashboardTuteur() {
           <h3 className="text-md font-bold mb-1">{selectedSeance.eleve_nom}</h3>
           <p className="text-sm mb-2">🕒 {new Date(selectedSeance.start).toLocaleTimeString()} à {new Date(selectedSeance.end).toLocaleTimeString()}</p>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => window.open(selectedSeance.lien, '_blank')} className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
+            <button onClick={() => window.open(selectedSeance.lien_tuteur || selectedSeance.lien, '_blank')} className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
             <button onClick={() => handleDeleteSeanceDirect(selectedSeance.id)} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
             {!selectedSeance.completee && selectedSeance.accedee && (
               <button onClick={() => handleCompleterSeanceDirect(selectedSeance)} className="bg-green-500 text-white px-3 py-1 rounded">Compléter</button>
