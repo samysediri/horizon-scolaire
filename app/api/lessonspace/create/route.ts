@@ -1,29 +1,35 @@
-// Fichier : app/api/lessonspace/create/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST() {
-  try {
-    const response = await fetch('https://api.lessonspace.com/v1/spaces', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.LESSONSPACE_API_KEY!}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: 'Séance de tutorat',
-        subject: 'Tutoring',
-        type: 'video',
-        user: { name: 'Tuteur', role: 'host' },
-        guests: [{ name: 'Élève', role: 'guest' }]
-      }),
-    });
+export async function POST(req: NextRequest) {
+  const apiKey = process.env.LESSONSPACE_API_KEY;
 
-    const data = await response.json();
-    if (!response.ok) return NextResponse.json({ error: data }, { status: 500 });
-
-    return NextResponse.json(data);
-  } catch (err: any) {
-    console.error("Erreur API Lessonspace :", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  if (!apiKey) {
+    return NextResponse.json({ error: 'Clé API Lessonspace manquante' }, { status: 500 });
   }
+
+  const response = await fetch('https://api.thelessonspace.com/v2/spaces', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'Séance Horizon Scolaire',
+      reusable: true, // ✅ permet de garder le tableau blanc
+      instant: true,
+      guest_join_url: true
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('Erreur Lessonspace:', data);
+    return NextResponse.json({ error: 'Échec de la création de l’espace Lessonspace', details: data }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    url_tuteur: data.url,           // lien host
+    url_eleve: data.guest_url       // lien invité
+  });
 }
