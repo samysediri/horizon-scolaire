@@ -65,7 +65,7 @@ export default function HoraireEleve() {
   return (
     <div className="p-6 relative">
       <h1 className="text-2xl font-bold mb-4">🗓️ Mon horaire</h1>
-      <div className="h-[40vh]">
+      <div className="h-[30vh]">
         <Calendar
           localizer={localizer}
           events={seances.map(s => ({
@@ -77,7 +77,7 @@ export default function HoraireEleve() {
           }))}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: '100%', fontSize: '0.5rem' }}
+          style={{ height: '100%', fontSize: '0.45rem' }}
           defaultView={Views.WEEK}
           min={minTime}
           max={maxTime}
@@ -92,9 +92,10 @@ export default function HoraireEleve() {
           style={{ top: popup.y + 10, left: popup.x + 10 }}
         >
           <h3 className="text-md font-bold mb-1">Séance</h3>
-          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
+          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}
+          </p>
           <button
-            onClick={() => window.open(popup.seance.lien, '_blank')}
+            onClick={() => window.open(popup.seance.lien_eleve, '_blank')}
             className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
           >
             Accéder
