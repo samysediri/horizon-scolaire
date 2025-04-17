@@ -72,6 +72,22 @@ export default function HoraireTuteur() {
     location.reload();
   };
 
+  const handleDeleteSeance = async (id: string) => {
+    if (!confirm('Supprimer cette séance?')) return;
+
+    const res = await fetch('/api/seances', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'Erreur');
+
+    alert('Séance supprimée!');
+    location.reload();
+  };
+
   const handleSelectEvent = (event: any, e: any) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
@@ -103,7 +119,7 @@ export default function HoraireTuteur() {
       </div>
       <button onClick={handleAddSeance} className="bg-green-600 text-white px-4 py-2 rounded">Ajouter</button>
 
-      <div className="h-[20vh] mt-6">
+      <div className="h-[60vh] mt-6">
         <Calendar
           localizer={localizer}
           events={seances.map(s => ({
@@ -115,7 +131,7 @@ export default function HoraireTuteur() {
           }))}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: '100%', fontSize: '0.35rem' }}
+          style={{ height: '100%', fontSize: '0.75rem' }}
           defaultView={Views.WEEK}
           min={minTime}
           max={maxTime}
@@ -131,18 +147,26 @@ export default function HoraireTuteur() {
         >
           <h3 className="text-md font-bold mb-1">{popup.seance.eleve_nom}</h3>
           <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
-          <button
-            onClick={() => window.open(popup.seance.lien_tuteur, '_blank')}
-            className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-          >
-            Accéder
-          </button>
-          <button
-            onClick={() => setPopup(null)}
-            className="bg-gray-400 text-white px-3 py-1 rounded"
-          >
-            Fermer
-          </button>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => window.open(popup.seance.lien_tuteur, '_blank')}
+              className="bg-blue-500 text-white px-3 py-1 rounded"
+            >
+              Accéder
+            </button>
+            <button
+              onClick={() => handleDeleteSeance(popup.seance.id)}
+              className="bg-red-500 text-white px-3 py-1 rounded"
+            >
+              Supprimer
+            </button>
+            <button
+              onClick={() => setPopup(null)}
+              className="bg-gray-400 text-white px-3 py-1 rounded"
+            >
+              Fermer
+            </button>
+          </div>
         </div>
       )}
     </div>
