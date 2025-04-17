@@ -45,8 +45,16 @@ export default function HoraireTuteur() {
     }
 
     const eleve = eleves.find(e => e.id === selectedEleveId);
-    if (!eleve || !eleve.lien_lessonspace) {
-      alert("Élève introuvable ou lien Lessonspace manquant.");
+    if (!eleve) {
+      alert("Élève introuvable.");
+      return;
+    }
+
+    const lessonspaceRes = await fetch('/api/lessonspace/create', { method: 'POST' });
+    const lessonspaceData = await lessonspaceRes.json();
+
+    if (!lessonspaceRes.ok || !lessonspaceData.url_tuteur || !lessonspaceData.url_eleve) {
+      alert("Erreur lors de la création de l'espace Lessonspace.");
       return;
     }
 
@@ -60,8 +68,8 @@ export default function HoraireTuteur() {
         heure: newSeance.heure,
         duree: newSeance.duree,
         eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
-        lien_tuteur: eleve.lien_lessonspace,
-        lien_eleve: eleve.lien_lessonspace
+        lien_tuteur: lessonspaceData.url_tuteur,
+        lien_eleve: lessonspaceData.url_eleve
       })
     });
 
