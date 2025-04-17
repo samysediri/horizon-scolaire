@@ -19,6 +19,7 @@ export default function HoraireEleve() {
   const [seances, setSeances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState('Chargement des séances...');
+  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
 
   useEffect(() => {
     const fetchSeances = async () => {
@@ -43,6 +44,11 @@ export default function HoraireEleve() {
     fetchSeances();
   }, [user, supabase]);
 
+  const handleSelectEvent = (event: any, e: any) => {
+    e.preventDefault();
+    setPopup({ x: e.clientX, y: e.clientY, seance: event });
+  };
+
   const defaultMin = new Date();
   defaultMin.setHours(6, 0, 0, 0);
   const defaultMax = new Date();
@@ -57,7 +63,7 @@ export default function HoraireEleve() {
   if (loading) return <p className="p-6 text-gray-500">{debug}</p>;
 
   return (
-    <div className="p-6">
+    <div className="p-6 relative">
       <h1 className="text-2xl font-bold mb-4">🗓️ Mon horaire</h1>
       <Calendar
         localizer={localizer}
@@ -70,12 +76,35 @@ export default function HoraireEleve() {
         }))}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 'calc(100vh - 200px)' }}
+        style={{ height: 'calc(100vh - 150px)' }}
         defaultView={Views.WEEK}
         min={minTime}
         max={maxTime}
         scrollToTime={minTime}
+        onSelectEvent={handleSelectEvent}
       />
+
+      {popup && (
+        <div
+          className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
+          style={{ top: popup.y + 10, left: popup.x + 10 }}
+        >
+          <h3 className="text-md font-bold mb-1">Séance</h3>
+          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
+          <button
+            onClick={() => window.open(popup.seance.lien, '_blank')}
+            className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+          >
+            Accéder
+          </button>
+          <button
+            onClick={() => setPopup(null)}
+            className="bg-gray-400 text-white px-3 py-1 rounded"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
 
       <div className="mt-4 text-sm text-gray-500">{debug}</div>
     </div>
