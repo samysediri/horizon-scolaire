@@ -1,3 +1,4 @@
+// Fichier : app/api/seances/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest) {
     const debut = localDate
     const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
+    // Générer le lien élève personnalisé
+    const lien_eleve = `${lien_lessonspace}?name=${encodeURIComponent(eleve_nom)}&user_role=student`
+
     const { error } = await supabase.from('seances').insert({
       tuteur_id,
       eleve_id,
@@ -30,6 +34,7 @@ export async function POST(req: NextRequest) {
       fin: fin.toISOString(),
       duree_minutes: Number(duree),
       lien: lien_lessonspace,
+      lien_eleve,
       eleve_nom
     })
 
