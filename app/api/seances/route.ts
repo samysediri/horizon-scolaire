@@ -15,10 +15,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 });
     }
 
-    // Convertir à l'heure du Québec (UTC-4)
     const [year, month, day] = date.split('-').map(Number);
     const [hours, minutes] = heure.split(':').map(Number);
-    const localDate = new Date(Date.UTC(year, month - 1, day, hours + 4, minutes)); // +4 pour compenser le toISOString
+    const localDate = new Date(Date.UTC(year, month - 1, day, hours + 4, minutes));
 
     const debut = localDate;
     const fin = new Date(debut.getTime() + Number(duree) * 60000);
