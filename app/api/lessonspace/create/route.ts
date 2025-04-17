@@ -1,43 +1,38 @@
-import { NextResponse } from 'next/server';
+// Fichier : app/api/lessonspace/create/route.ts
+import { NextResponse } from 'next/server'
 
 export async function POST() {
+  const apiKey = process.env.LESSONSPACE_API_KEY
+  const spaceId = crypto.randomUUID()
+
   try {
-    const apiKey = process.env.LESSONSPACE_API_KEY;
-
-    if (!apiKey) {
-      console.error('[ERREUR] Clé API manquante');
-      return NextResponse.json({ error: 'Clé API manquante' }, { status: 500 });
-    }
-
-    const res = await fetch('https://api.thelessonspace.com/v2/spaces/', {
+    const res = await fetch('https://api.lessonspace.com/v1/spaces/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name: 'Séance Horizon Scolaire',
-        subject: 'Tutorat',
-        expires_at: null,
-        allow_guest_access: true,
-        instant: true,
-        record: false,
-      }),
-    });
+        id: spaceId,
+        name: `Espace-${spaceId}`,
+        type: 'persistent'
+      })
+    })
 
-    const data = await res.json();
+    const data = await res.json()
 
-    if (!res.ok) {
-      console.error('[Lessonspace API Error]', JSON.stringify(data, null, 2));
-      return NextResponse.json({ error: data }, { status: 500 });
+    if (!res.ok || !data.id) {
+      console.error('[Lessonspace Error]', data)
+      return NextResponse.json({ error: 'Erreur création espace', data }, { status: 500 })
     }
 
     return NextResponse.json({
-      url_tuteur: data.url,
-      url_eleve: data.guest_url,
-    });
-  } catch (err: any) {
-    console.error('[Server Error]', err);
-    return NextResponse.json({ error: err.message || 'Erreur serveur' }, { status: 500 });
+      id: data.id,
+      url: `https://app.lessonspace.com/space/${data.id}`,
+      invite_url: `https://app.lessonspace.com/space/${data.id}?role=guest`
+    })
+  } catch (err) {
+    console.error('[API Error]', err)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
