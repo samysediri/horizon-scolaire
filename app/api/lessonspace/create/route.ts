@@ -1,10 +1,11 @@
-// app/api/lessonspace/create/route.ts
 import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
     const apiKey = process.env.LESSONSPACE_API_KEY;
+
     if (!apiKey) {
+      console.error('[ERREUR] Clé API manquante');
       return NextResponse.json({ error: 'Clé API manquante' }, { status: 500 });
     }
 
@@ -27,7 +28,7 @@ export async function POST() {
     const data = await res.json();
 
     if (!res.ok) {
-      console.error('[Lessonspace API Error]', data);
+      console.error('[Lessonspace API Error]', JSON.stringify(data, null, 2));
       return NextResponse.json({ error: data }, { status: 500 });
     }
 
