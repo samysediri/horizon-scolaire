@@ -76,7 +76,7 @@ export default function HoraireEleve() {
         }))}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 'calc(100vh - 100px)', fontSize: '0.75rem' }}
+        style={{ height: 'calc(100vh - 40px)', fontSize: '0.65rem' }}
         defaultView={Views.WEEK}
         min={minTime}
         max={maxTime}
