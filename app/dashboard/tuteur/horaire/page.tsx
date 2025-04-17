@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useEffect, useState } from 'react';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
@@ -13,20 +13,19 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 const locales = { fr };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
-export default function DashboardTuteur() {
+export default function HoraireTuteur() {
   const user = useUser();
+  const supabase = useSupabaseClient();
   const [eleves, setEleves] = useState<any[]>([]);
   const [seances, setSeances] = useState<any[]>([]);
   const [newSeance, setNewSeance] = useState({ date: '', heure: '', duree: '', recurrence: 1 });
   const [selectedEleveId, setSelectedEleveId] = useState('');
-  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
-  const [selectedSeance, setSelectedSeance] = useState<any | null>(null);
-  const calendarRef = useRef(null);
+  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-
     const fetchData = async () => {
+      if (!user) return;
+
       const elevesRes = await fetch(`/api/tuteurs/eleves?tuteur_id=${user.id}`);
       const elevesData = await elevesRes.json();
       setEleves(elevesData || []);
@@ -45,27 +44,15 @@ export default function DashboardTuteur() {
       return;
     }
 
-    const eleve = eleves.find(e => e.id === selectedEleveId || e.id === selectedEleveId.toString());
+    const eleve = eleves.find(e => e.id === selectedEleveId);
     if (!eleve) {
       alert("Élève introuvable.");
       return;
     }
 
-    const lessonspaceRes = await fetch('/api/lessonspace/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nom_eleve: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
-        nom_tuteur: user?.user_metadata?.full_name || 'Tuteur inconnu',
-      })
-    });
-
-    const lessonspaceData = await lessonspaceRes.json();
-
-    if (!lessonspaceRes.ok || !lessonspaceData?.url_tuteur || !lessonspaceData?.url_eleve) {
-      alert("Erreur lors de la création de la salle Lessonspace");
-      return;
-    }
+    // Utiliser lien_lessonspace déjà enregistré dans la table eleves
+    const lien_tuteur = eleve.lien_lessonspace;
+    const lien_eleve = eleve.lien_lessonspace; // même lien pour persistance
 
     const res = await fetch('/api/seances', {
       method: 'POST',
@@ -76,9 +63,9 @@ export default function DashboardTuteur() {
         date: newSeance.date,
         heure: newSeance.heure,
         duree: newSeance.duree,
-        lien_tuteur: lessonspaceData.url_tuteur,
-        lien_eleve: lessonspaceData.url_eleve,
-        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`
+        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
+        lien_tuteur,
+        lien_eleve
       })
     });
 
@@ -89,56 +76,9 @@ export default function DashboardTuteur() {
     location.reload();
   };
 
-  const handleDeleteSeanceDirect = async (id: string) => {
-    await fetch(`/api/seances`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    alert('Séance supprimée');
-    location.reload();
-  };
-
-  const handleCompleterSeanceDirect = async (event: any) => {
-    const dureeReelle = prompt("Durée réelle (en minutes):");
-    if (!dureeReelle || isNaN(Number(dureeReelle))) return;
-
-    const response = await fetch('/api/lessonspace/replay', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ space_id: event.lien?.split('/').pop() })
-    });
-
-    const data = await response.json();
-    if (!response.ok || !data.replay_url) {
-      alert(`Erreur Lessonspace : ${response.status} - ${JSON.stringify(data)}`);
-      return;
-    }
-
-    await fetch(`/api/seances`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: event.id,
-        completee: true,
-        duree_reelle: parseInt(dureeReelle),
-        lien_revoir: data.replay_url
-      })
-    });
-
-    alert("Séance complétée!");
-    location.reload();
-  };
-
-  const handleLogout = async () => {
-    await fetch('/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  };
-
   const handleSelectEvent = (event: any, e: any) => {
     e.preventDefault();
-    setSelectedSeance(event);
-    setPopupPosition({ x: e.clientX, y: e.clientY });
+    setPopup({ x: e.clientX, y: e.clientY, seance: event });
   };
 
   const defaultMin = new Date();
@@ -153,11 +93,8 @@ export default function DashboardTuteur() {
   const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
 
   return (
-    <div className="p-4 relative">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Ajouter une séance</h1>
-        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Déconnexion</button>
-      </div>
+    <div className="p-6 relative">
+      <h1 className="text-2xl font-bold mb-4">🗓️ Horaire Tuteur</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <select onChange={e => setSelectedEleveId(e.target.value)} className="p-2 border rounded">
@@ -170,41 +107,46 @@ export default function DashboardTuteur() {
       </div>
       <button onClick={handleAddSeance} className="bg-green-600 text-white px-4 py-2 rounded">Ajouter</button>
 
-      <h2 className="text-lg font-semibold mt-8 mb-2">Calendrier</h2>
-      <Calendar
-        localizer={localizer}
-        events={seances.map(s => ({
-          id: s.id,
-          title: s.eleve_nom,
-          start: new Date(s.debut),
-          end: new Date(s.fin),
-          ...s
-        }))}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 'calc(100vh - 250px)' }}
-        defaultView={Views.WEEK}
-        min={minTime}
-        max={maxTime}
-        scrollToTime={minTime}
-        onSelectEvent={handleSelectEvent}
-      />
+      <div className="h-[20vh] mt-6">
+        <Calendar
+          localizer={localizer}
+          events={seances.map(s => ({
+            id: s.id,
+            title: s.eleve_nom || 'Séance',
+            start: new Date(s.debut),
+            end: new Date(s.fin),
+            ...s
+          }))}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: '100%', fontSize: '0.35rem' }}
+          defaultView={Views.WEEK}
+          min={minTime}
+          max={maxTime}
+          scrollToTime={minTime}
+          onSelectEvent={handleSelectEvent}
+        />
+      </div>
 
-      {selectedSeance && popupPosition && (
+      {popup && (
         <div
           className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
-          style={{ top: popupPosition.y + 10, left: popupPosition.x + 10 }}
+          style={{ top: popup.y + 10, left: popup.x + 10 }}
         >
-          <h3 className="text-md font-bold mb-1">{selectedSeance.eleve_nom}</h3>
-          <p className="text-sm mb-2">🕒 {new Date(selectedSeance.start).toLocaleTimeString()} à {new Date(selectedSeance.end).toLocaleTimeString()}</p>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => window.open(selectedSeance.lien_tuteur || selectedSeance.lien, '_blank')} className="bg-blue-500 text-white px-3 py-1 rounded">Accéder</button>
-            <button onClick={() => handleDeleteSeanceDirect(selectedSeance.id)} className="bg-red-500 text-white px-3 py-1 rounded">Supprimer</button>
-            {!selectedSeance.completee && selectedSeance.accedee && (
-              <button onClick={() => handleCompleterSeanceDirect(selectedSeance)} className="bg-green-500 text-white px-3 py-1 rounded">Compléter</button>
-            )}
-            <button onClick={() => setSelectedSeance(null)} className="bg-gray-400 text-white px-3 py-1 rounded">Fermer</button>
-          </div>
+          <h3 className="text-md font-bold mb-1">{popup.seance.eleve_nom}</h3>
+          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
+          <button
+            onClick={() => window.open(popup.seance.lien_tuteur, '_blank')}
+            className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+          >
+            Accéder
+          </button>
+          <button
+            onClick={() => setPopup(null)}
+            className="bg-gray-400 text-white px-3 py-1 rounded"
+          >
+            Fermer
+          </button>
         </div>
       )}
     </div>
