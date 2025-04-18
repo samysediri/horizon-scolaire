@@ -53,7 +53,7 @@ export default function HoraireTuteur() {
     const lessonspaceRes = await fetch('/api/lessonspace/create', { method: 'POST' });
     const lessonspaceData = await lessonspaceRes.json();
 
-    if (!lessonspaceRes.ok || !lessonspaceData.url_tuteur || !lessonspaceData.url_eleve) {
+    if (!lessonspaceRes.ok || !lessonspaceData.invite_url || !lessonspaceData.url) {
       alert("Erreur lors de la création de l'espace Lessonspace.");
       return;
     }
@@ -67,9 +67,9 @@ export default function HoraireTuteur() {
         date: newSeance.date,
         heure: newSeance.heure,
         duree: newSeance.duree,
-        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`,
-        lien_tuteur: lessonspaceData.url_tuteur,
-        lien_eleve: lessonspaceData.url_eleve
+        eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`.trim(),
+        lien_tuteur: lessonspaceData.url,
+        lien_eleve: lessonspaceData.invite_url
       })
     });
 
