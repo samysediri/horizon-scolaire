@@ -50,17 +50,10 @@ export default function HoraireTuteur() {
       return;
     }
 
-    const lessonspaceRes = await fetch('/api/lessonspace/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const lessonspaceData = await lessonspaceRes.json();
-
-    if (!lessonspaceRes.ok || !lessonspaceData.invite_url || !lessonspaceData.url) {
-      console.error('[Lessonspace Error]', lessonspaceData);
-      alert("Erreur lors de la création de l'espace Lessonspace: " + JSON.stringify(lessonspaceData));
-      return;
-    }
+    // Génère un ID unique pour l'espace Lessonspace
+    const uniqueId = `horizon-${user?.id}-${selectedEleveId}-${Date.now()}`;
+    const lienTuteur = `https://app.thelessonspace.com/space/${uniqueId}#teacher`;
+    const lienEleve = `https://app.thelessonspace.com/space/${uniqueId}#student`;
 
     const res = await fetch('/api/seances', {
       method: 'POST',
@@ -72,8 +65,8 @@ export default function HoraireTuteur() {
         heure: newSeance.heure,
         duree: newSeance.duree,
         eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`.trim(),
-        lien_tuteur: lessonspaceData.url,
-        lien_eleve: lessonspaceData.invite_url
+        lien_tuteur: lienTuteur,
+        lien_eleve: lienEleve
       })
     });
 
