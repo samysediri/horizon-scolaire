@@ -1,43 +1,49 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+'use client'
 
-export default async function Page() {
-  const supabase = createServerComponentClient({ cookies });
+import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function AuthConfirmPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  if (!user) {
-    return redirect('/login');
-  }
+  useEffect(() => {
+    const exchangeCode = async () => {
+      const code = searchParams.get('code')
+      if (!code) return
 
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+      const supabase = createPagesBrowserClient()
 
-  if (!profile || error) {
-    return redirect('/login');
-  }
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      if (error) {
+        console.error('Erreur d’échange de session :', error.message)
+        return
+      }
 
-  if (profile.role === 'admin') {
-    return redirect('/dashboard/admin');
-  }
+      // Récupération du profil après connexion
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return router.push('/login')
 
-  if (profile.role === 'tuteur') {
-    return redirect('/dashboard/tuteur');
-  }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-  if (profile.role === 'eleve') {
-    return redirect('/dashboard/eleve');
-  }
+      if (!profile?.role) {
+        return router.push('/login')
+      }
 
-  if (profile.role === 'parent') {
-    return redirect('/dashboard/parent');
-  }
+      if (profile.role === 'admin') router.push('/dashboard/admin')
+      else if (profile.role === 'tuteur') router.push('/dashboard/tuteur')
+      else if (profile.role === 'eleve') router.push('/dashboard/eleve')
+      else if (profile.role === 'parent') router.push('/dashboard/parent')
+      else router.push('/login')
+    }
 
-  return redirect('/login');
+    exchangeCode()
+  }, [router, searchParams])
+
+  return <p className="p-6 text-gray-500">Connexion en cours...</p>
 }
