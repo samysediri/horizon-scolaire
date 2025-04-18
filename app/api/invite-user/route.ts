@@ -1,23 +1,42 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+// /app/api/invite-user/route.ts
+
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies });
-  const { email } = await req.json();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-  if (!email) {
-    return NextResponse.json({ error: 'Adresse courriel manquante' }, { status: 400 });
+export async function POST(req: NextRequest) {
+  const { email, role } = await req.json();
+
+  if (!email || !role) {
+    return NextResponse.json({ error: 'Email et rôle requis.' }, { status: 400 });
   }
 
-  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo: 'https://horizon-scolaire.vercel.app/auth/confirm'
-  });
+  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
 
   if (error) {
-    console.error('Erreur en invitant:', error.message);
+    console.error('[Invite] Erreur en invitant:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, data });
+  const userId = data?.user?.id;
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Impossible de récupérer le user ID.' }, { status: 500 });
+  }
+
+  const { error: profileError } = await supabase.from('profiles').insert({
+    id: userId,
+    email,
+    role,
+  });
+
+  if (profileError) {
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }
