@@ -1,26 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from 'next/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+)
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { tuteur_id, eleve_id, date, heure, duree, eleve_nom, lien_tuteur, lien_eleve } = body;
+    const body = await req.json()
+    const { tuteur_id, eleve_id, date, heure, duree, eleve_nom, lien_tuteur, lien_eleve } = body
 
     if (!tuteur_id || !eleve_id || !date || !heure || !duree || !lien_tuteur || !lien_eleve) {
-      return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 });
+      return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
 
-    const [year, month, day] = date.split('-').map(Number);
-    const [hours, minutes] = heure.split(':').map(Number);
-    const localDate = new Date(Date.UTC(year, month - 1, day, hours + 4, minutes));
+    const [year, month, day] = date.split('-').map(Number)
+    const [hours, minutes] = heure.split(':').map(Number)
+    const localDate = new Date(Date.UTC(year, month - 1, day, hours + 4, minutes))
 
-    const debut = localDate;
-    const fin = new Date(debut.getTime() + Number(duree) * 60000);
+    const debut = localDate
+    const fin = new Date(debut.getTime() + Number(duree) * 60000)
 
     const { error } = await supabase.from('seances').insert({
       tuteur_id,
@@ -31,56 +31,82 @@ export async function POST(req: NextRequest) {
       eleve_nom,
       lien_tuteur,
       lien_eleve,
-    });
+      duree_reelle: null,
+    })
 
     if (error) {
-      console.error('[API] Erreur insertion séance:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[API] Erreur insertion séance:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (err: any) {
-    return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { id } = body;
+    const body = await req.json()
+    const { id } = body
 
-    if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
 
-    const { error } = await supabase.from('seances').delete().eq('id', id);
+    const { error } = await supabase.from('seances').delete().eq('id', id)
 
     if (error) {
-      console.error('[API] Erreur suppression séance:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[API] Erreur suppression séance:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (err: any) {
-    return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { id, duree_reelle } = body
+
+    if (!id || duree_reelle === undefined) {
+      return NextResponse.json({ error: 'ID ou durée réelle manquante' }, { status: 400 })
+    }
+
+    const { error } = await supabase
+      .from('seances')
+      .update({ duree_reelle })
+      .eq('id', id)
+
+    if (error) {
+      console.error('[API] Erreur mise à jour durée réelle:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 })
   }
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const tuteur_id = searchParams.get('tuteur_id');
+  const { searchParams } = new URL(req.url)
+  const tuteur_id = searchParams.get('tuteur_id')
 
   if (!tuteur_id) {
-    return NextResponse.json({ error: 'Paramètre tuteur_id manquant' }, { status: 400 });
+    return NextResponse.json({ error: 'Paramètre tuteur_id manquant' }, { status: 400 })
   }
 
   const { data, error } = await supabase
     .from('seances')
     .select('*')
-    .eq('tuteur_id', tuteur_id);
+    .eq('tuteur_id', tuteur_id)
 
   if (error) {
-    console.error('[API] Erreur récupération séances:', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[API] Erreur récupération séances:', error.message)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json(data)
 }
