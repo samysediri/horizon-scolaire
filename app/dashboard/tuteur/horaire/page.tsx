@@ -57,7 +57,8 @@ export default function HoraireTuteur() {
     const lessonspaceData = await lessonspaceRes.json();
 
     if (!lessonspaceRes.ok || !lessonspaceData.invite_url || !lessonspaceData.url) {
-      alert("Erreur lors de la création de l'espace Lessonspace.");
+      console.error('[Lessonspace Error]', lessonspaceData);
+      alert("Erreur lors de la création de l'espace Lessonspace: " + JSON.stringify(lessonspaceData));
       return;
     }
 
