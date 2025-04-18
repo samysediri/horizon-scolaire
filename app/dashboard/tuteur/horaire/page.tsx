@@ -50,7 +50,10 @@ export default function HoraireTuteur() {
       return;
     }
 
-    const lessonspaceRes = await fetch('/api/lessonspace/create', { method: 'POST' });
+    const lessonspaceRes = await fetch('/api/lessonspace/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
     const lessonspaceData = await lessonspaceRes.json();
 
     if (!lessonspaceRes.ok || !lessonspaceData.invite_url || !lessonspaceData.url) {
