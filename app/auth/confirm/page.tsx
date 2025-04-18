@@ -10,20 +10,16 @@ export default function ConfirmPage() {
 
   useEffect(() => {
     const supabase = createPagesBrowserClient();
+    const currentUrl = window.location.href;
 
-    const code = searchParams.get('code');
-    const nextUrl = window.location.href;
-
-    if (code) {
-      supabase.auth
-        .exchangeCodeForSession({ url: nextUrl }) // 👈 ici on passe { url }
-        .then(() => {
-          router.push('/auth/confirm'); // ou dashboard dynamique selon le rôle
-        })
-        .catch(() => {
-          router.push('/login');
-        });
-    }
+    supabase.auth
+      .exchangeCodeForSession(currentUrl) // ✅ ici on passe directement un string
+      .then(() => {
+        router.push('/auth/confirm');
+      })
+      .catch(() => {
+        router.push('/login');
+      });
   }, [router, searchParams]);
 
   return (
