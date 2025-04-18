@@ -1,25 +1,28 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
 
 export default function ConfirmPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const supabase = createPagesBrowserClient();
 
-    // Cette méthode s'occupe de récupérer access_token & refresh_token dans l'URL
+    const code = searchParams.get('code');
+    if (!code) return;
+
     supabase.auth
-      .exchangeCodeForSession()
+      .exchangeCodeForSession({ query: { code } })
       .then(() => {
-        router.push('/auth/confirm');
+        router.push('/auth/confirm'); // ou vers un dashboard spécifique selon le rôle
       })
       .catch(() => {
         router.push('/login');
       });
-  }, []);
+  }, [searchParams, router]);
 
   return (
     <div className="p-6 text-center">
