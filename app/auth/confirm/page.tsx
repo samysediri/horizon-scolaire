@@ -3,14 +3,16 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Suspense } from 'react';
 
-export default function ConfirmPage() {
+function ConfirmRedirector() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
 
   useEffect(() => {
-    const exchange = async () => {
+    const doRedirect = async () => {
       const supabase = createPagesBrowserClient();
 
       if (!code) {
@@ -36,30 +38,26 @@ export default function ConfirmPage() {
         return;
       }
 
-      switch (profile.role) {
-        case 'admin':
-          router.replace('/dashboard/admin');
-          break;
-        case 'tuteur':
-          router.replace('/dashboard/tuteur');
-          break;
-        case 'eleve':
-          router.replace('/dashboard/eleve');
-          break;
-        case 'parent':
-          router.replace('/dashboard/parent');
-          break;
-        default:
-          router.replace('/login');
-      }
+      const redirects: Record<string, string> = {
+        admin: '/dashboard/admin',
+        tuteur: '/dashboard/tuteur',
+        eleve: '/dashboard/eleve',
+        parent: '/dashboard/parent',
+      };
+
+      router.replace(redirects[profile.role] || '/login');
     };
 
-    exchange();
+    doRedirect();
   }, [code, router]);
 
+  return <p className="p-8 text-center text-lg">Connexion en cours...</p>;
+}
+
+export default function Page() {
   return (
-    <div className="flex items-center justify-center h-screen text-lg">
-      Redirection en cours...
-    </div>
+    <Suspense fallback={<p className="p-8 text-center text-lg">Chargement...</p>}>
+      <ConfirmRedirector />
+    </Suspense>
   );
 }
