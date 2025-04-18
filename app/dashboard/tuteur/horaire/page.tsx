@@ -186,30 +186,36 @@ export default function HoraireTuteur() {
         >
           <h3 className="text-md font-bold mb-1">{popup.seance.eleve_nom}</h3>
           <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => {
-                marquerSeanceVue(popup.seance.id);
-                window.open(popup.seance.lien_tuteur, '_blank');
-              }}
-              className="bg-blue-500 text-white px-3 py-1 rounded"
-            >
-              Accéder
-            </button>
-            {estVue(popup.seance.id) && (
+          {popup.seance.duree_reelle ? (
+            <p className="text-green-600 font-semibold">✔️ Complété ({popup.seance.duree_reelle} min)</p>
+          ) : (
+            <div className="flex gap-2 flex-wrap">
               <button
-                className="bg-purple-600 text-white px-3 py-1 rounded"
-                onClick={() => enregistrerDureeReelle(popup.seance.id)}
+                onClick={() => {
+                  marquerSeanceVue(popup.seance.id);
+                  window.open(popup.seance.lien_tuteur, '_blank');
+                }}
+                className="bg-blue-500 text-white px-3 py-1 rounded"
               >
-                Compléter
+                Accéder
               </button>
-            )}
-            <button
-              onClick={() => handleDeleteSeance(popup.seance.id)}
-              className="bg-red-500 text-white px-3 py-1 rounded"
-            >
-              Supprimer
-            </button>
+              {estVue(popup.seance.id) && (
+                <button
+                  className="bg-purple-600 text-white px-3 py-1 rounded"
+                  onClick={() => enregistrerDureeReelle(popup.seance.id)}
+                >
+                  Compléter
+                </button>
+              )}
+              <button
+                onClick={() => handleDeleteSeance(popup.seance.id)}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Supprimer
+              </button>
+            </div>
+          )}
+          <div className="mt-2">
             <button
               onClick={() => setPopup(null)}
               className="bg-gray-400 text-white px-3 py-1 rounded"
