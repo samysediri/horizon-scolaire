@@ -5,15 +5,15 @@ export async function POST() {
 
   if (!apiKey) {
     console.error('❌ Clé API manquante');
-    return NextResponse.json({ error: 'Clé API manquante' }, { status: 500 });
+    return NextResponse.json({ error: 'API key manquante' }, { status: 500 });
   }
 
   try {
     const response = await fetch('https://api.thelessonspace.com/v2/spaces/', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'Séance Horizon Scolaire',
@@ -21,9 +21,8 @@ export async function POST() {
         guest_join_url: true,
         settings: {
           whiteboard: true,
-          chat: true
-        }
-      })
+        },
+      }),
     });
 
     const data = await response.json();
@@ -34,12 +33,12 @@ export async function POST() {
     }
 
     return NextResponse.json({
-      url: data.url,               // Lien pour le tuteur (host)
-      invite_url: data.invite_url, // Lien pour l'élève (invité)
+      url: data.url,              // lien pour le tuteur (host)
+      invite_url: data.invite_url, // lien invité pour l’élève
       space_id: data.space_id
     });
-  } catch (error) {
-    console.error('❌ Erreur API Lessonspace:', error);
+  } catch (error: any) {
+    console.error('Erreur API Lessonspace:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
