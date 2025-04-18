@@ -72,7 +72,8 @@ export default function HoraireTuteur() {
         duree: newSeance.duree,
         eleve_nom: `${eleve?.prenom || ''} ${eleve?.nom || ''}`.trim(),
         lien_tuteur: lienTuteur,
-        lien_eleve: lienEleve
+        lien_eleve: lienEleve,
+        duree_reelle: null
       })
     });
 
@@ -102,6 +103,33 @@ export default function HoraireTuteur() {
   const handleSelectEvent = (event: any, e: any) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
+  };
+
+  const marquerSeanceVue = (id: string) => {
+    const vues = JSON.parse(localStorage.getItem('seancesVues') || '[]');
+    if (!vues.includes(id)) {
+      vues.push(id);
+      localStorage.setItem('seancesVues', JSON.stringify(vues));
+    }
+  };
+
+  const estVue = (id: string) => {
+    const vues = JSON.parse(localStorage.getItem('seancesVues') || '[]');
+    return vues.includes(id);
+  };
+
+  const enregistrerDureeReelle = async (id: string) => {
+    const input = prompt('Durée réelle en minutes?');
+    if (!input || isNaN(Number(input))) return alert('Valeur invalide');
+    const res = await fetch('/api/seances', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, duree_reelle: Number(input) })
+    });
+    const data = await res.json();
+    if (!res.ok) return alert(data?.error || 'Erreur');
+    alert('Durée enregistrée.');
+    location.reload();
   };
 
   const defaultMin = new Date();
@@ -160,11 +188,22 @@ export default function HoraireTuteur() {
           <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => window.open(popup.seance.lien_tuteur, '_blank')}
+              onClick={() => {
+                marquerSeanceVue(popup.seance.id);
+                window.open(popup.seance.lien_tuteur, '_blank');
+              }}
               className="bg-blue-500 text-white px-3 py-1 rounded"
             >
               Accéder
             </button>
+            {estVue(popup.seance.id) && (
+              <button
+                className="bg-purple-600 text-white px-3 py-1 rounded"
+                onClick={() => enregistrerDureeReelle(popup.seance.id)}
+              >
+                Compléter
+              </button>
+            )}
             <button
               onClick={() => handleDeleteSeance(popup.seance.id)}
               className="bg-red-500 text-white px-3 py-1 rounded"
