@@ -50,10 +50,16 @@ export default function HoraireTuteur() {
       return;
     }
 
-    // Génère un ID unique pour l'espace Lessonspace
-    const uniqueId = `horizon-${user?.id}-${selectedEleveId}-${Date.now()}`;
-    const lienTuteur = `https://app.thelessonspace.com/space/${uniqueId}#teacher`;
-    const lienEleve = `https://app.thelessonspace.com/space/${uniqueId}#student`;
+    let baseLessonspaceUrl = eleve?.lien_lessonspace || '';
+    baseLessonspaceUrl = baseLessonspaceUrl.replace('https://www.', 'https://app.');
+
+    if (!baseLessonspaceUrl.startsWith('https://app.thelessonspace.com/')) {
+      alert("Lien Lessonspace invalide pour cet élève.");
+      return;
+    }
+
+    const lienTuteur = `${baseLessonspaceUrl}#teacher`;
+    const lienEleve = `${baseLessonspaceUrl}#student`;
 
     const res = await fetch('/api/seances', {
       method: 'POST',
