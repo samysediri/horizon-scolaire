@@ -3,38 +3,60 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSessionContext } from '@supabase/auth-helpers-react';
+import { useState, Suspense } from 'react';
 
-export default function ConfirmPage() {
-  const router = useRouter();
+function ConfirmContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const supabase = createPagesBrowserClient();
+  const { isLoading } = useSessionContext();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code)
-        .then(async ({ data, error }) => {
-          if (error) {
-            console.error('Erreur lors de la connexion :', error.message);
+    const exchangeCodeForSession = async () => {
+      const code = searchParams.get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setError(error.message);
+        } else {
+          const { data: { user } } = await supabase.auth.getUser();
+
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user?.id)
+            .single();
+
+          if (profileError || !profile) {
             router.push('/login');
           } else {
-            // Récupérer le rôle pour rediriger
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', user?.id)
-              .single();
-
-            if (profile?.role === 'admin') router.push('/dashboard/admin');
-            else if (profile?.role === 'tuteur') router.push('/dashboard/tuteur');
-            else if (profile?.role === 'eleve') router.push('/dashboard/eleve');
-            else if (profile?.role === 'parent') router.push('/dashboard/parent');
-            else router.push('/');
+            const role = profile.role;
+            if (role === 'admin') router.push('/dashboard/admin');
+            else if (role === 'tuteur') router.push('/dashboard/tuteur');
+            else if (role === 'parent') router.push('/dashboard/parent');
+            else if (role === 'eleve') router.push('/dashboard/eleve');
+            else router.push('/login');
           }
-        });
-    }
-  }, [searchParams, supabase, router]);
+        }
+      }
+    };
 
-  return <p className="p-4">Connexion en cours…</p>;
+    if (!isLoading) {
+      exchangeCodeForSession();
+    }
+  }, [searchParams, isLoading]);
+
+  if (error) return <p>Erreur : {error}</p>;
+  return <p>Connexion en cours...</p>;
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense fallback={<p>Chargement...</p>}>
+      <ConfirmContent />
+    </Suspense>
+  );
 }
