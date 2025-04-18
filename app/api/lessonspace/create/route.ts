@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+export async function GET() {
+  return NextResponse.json({ success: true, message: 'Endpoint détecté.' });
+}
 
 export async function POST() {
   const apiKey = process.env.LESSONSPACE_API_KEY;
@@ -39,7 +42,7 @@ export async function POST() {
       space_id: data.space_id
     });
   } catch (error) {
-    console.error('❌ Erreur fetch Lessonspace:', error);
+    console.error('❌ Erreur lors de la requête à Lessonspace:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
