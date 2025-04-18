@@ -11,15 +11,19 @@ export default function ConfirmPage() {
   useEffect(() => {
     const supabase = createPagesBrowserClient();
 
-    // Appelle la méthode pour échanger le code d'auth contre une session
-    supabase.auth
-      .exchangeCodeForSession()
-      .then(() => {
-        router.push('/auth/confirm');
-      })
-      .catch(() => {
-        router.push('/login');
-      });
+    const code = searchParams.get('code');
+    const nextUrl = window.location.href;
+
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession({ url: nextUrl }) // 👈 ici on passe { url }
+        .then(() => {
+          router.push('/auth/confirm'); // ou dashboard dynamique selon le rôle
+        })
+        .catch(() => {
+          router.push('/login');
+        });
+    }
   }, [router, searchParams]);
 
   return (
