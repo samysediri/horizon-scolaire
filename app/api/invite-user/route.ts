@@ -1,11 +1,8 @@
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const supabase = createServerActionClient({ cookies });
   const body = await req.json();
-
   const { email, role = 'tuteur', metadata = {}, nom } = body;
 
   if (!email) {
@@ -15,7 +12,12 @@ export async function POST(req: Request) {
   const userMetadata = { ...metadata };
   if (nom && !userMetadata.nom) userMetadata.nom = nom;
 
-  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // 👈 clé privée
+  );
+
+  const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
     data: userMetadata,
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
   });
@@ -24,8 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Insérer dans `profiles`
-  await supabase.from('profiles').insert([
+  await supabaseAdmin.from('profiles').insert([
     {
       uuid: data.user.id,
       email,
@@ -34,9 +35,8 @@ export async function POST(req: Request) {
     },
   ]);
 
-  // Insérer dans la table dédiée si c’est un tuteur
   if (role === 'tuteur') {
-    await supabase.from('tuteurs').insert([
+    await supabaseAdmin.from('tuteurs').insert([
       {
         uuid: data.user.id,
         email,
