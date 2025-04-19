@@ -66,3 +66,26 @@ export async function ajouterSeanceDansFacture(seance_id: number) {
     if (insertError) throw insertError;
   }
 }
+
+export async function genererFacturesPourMois(mois: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: seances, error } = await supabase
+    .from('seances')
+    .select('id')
+    .eq('completee', true)
+    .gte('debut', `${mois}-01`)
+    .lte('debut', `${mois}-31`);
+
+  if (error) throw new Error('Erreur lors de la récupération des séances');
+
+  for (const seance of seances || []) {
+    await ajouterSeanceDansFacture(seance.id);
+  }
+
+  return { total: seances?.length || 0 };
+}
+
