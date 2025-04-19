@@ -1,18 +1,13 @@
-import { genererFacturesPourMois } from '@/utils/facturation'
+import { genererFacturesPourMois } from '@/utils/facturation';
 
 export async function POST() {
   try {
-    const mois = new Date().getMonth() + 1 // avril = 4
-    const annee = new Date().getFullYear()
+    const now = new Date();
+    const mois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const result = await genererFacturesPourMois(mois);
 
-    const resultat = await genererFacturesPourMois(mois, annee)
-
-    return new Response(JSON.stringify({ succes: true, resultat }), {
-      status: 200,
-    })
-  } catch (error: any) {
-    return new Response(JSON.stringify({ succes: false, message: error.message }), {
-      status: 500,
-    })
+    return Response.json({ success: true, ...result });
+  } catch (err: any) {
+    return Response.json({ error: err.message }, { status: 500 });
   }
 }
