@@ -1,5 +1,5 @@
-import ConfirmPageClient from './ConfirmPageClient';
+import ConfirmClient from './ConfirmClient';
 
 export default function Page() {
-  return <ConfirmPageClient />;
+  return <ConfirmClient />;
 }
