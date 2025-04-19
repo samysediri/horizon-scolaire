@@ -1,46 +1,45 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 export default function AjouterEleve() {
-  const [nom, setNom] = useState('')
-  const [email, setEmail] = useState('')
-  const [parentNom, setParentNom] = useState('')
-  const [parentEmail, setParentEmail] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [nom, setNom] = useState('');
+  const [email, setEmail] = useState('');
+  const [parentNom, setParentNom] = useState('');
+  const [parentEmail, setParentEmail] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSuccess(false)
-    setError('')
+    e.preventDefault();
+    setSuccess(false);
+    setError('');
 
     try {
-      const res = await fetch('/api/invite-user', {
+      const res = await fetch('/api/invite-eleve-parent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email,
-          role: 'eleve',
-          metadata: { nom },
-          parentEmail,
-          parentName: parentNom,
-        }),
-      })
+          eleve_nom: nom,
+          eleve_email: email,
+          parent_nom: parentNom,
+          parent_email: parentEmail
+        })
+      });
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur à la création de l’élève')
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur à la création de l’élève et du parent');
 
-      setSuccess(true)
-      setNom('')
-      setEmail('')
-      setParentNom('')
-      setParentEmail('')
+      setSuccess(true);
+      setNom('');
+      setEmail('');
+      setParentNom('');
+      setParentEmail('');
     } catch (err: any) {
-      console.error('Erreur dans handleSubmit:', err)
-      setError(err.message || 'Une erreur est survenue.')
+      console.error('Erreur dans handleSubmit:', err);
+      setError(err.message || 'Une erreur est survenue.');
     }
-  }
+  };
 
   return (
     <div className="p-8 max-w-xl mx-auto">
@@ -86,9 +85,9 @@ export default function AjouterEleve() {
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Inviter l’élève et le parent
+          Inviter l'élève et le parent
         </button>
       </form>
     </div>
-  )
+  );
 }
