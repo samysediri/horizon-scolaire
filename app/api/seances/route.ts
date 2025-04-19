@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       lien_tuteur,
       lien_eleve,
       duree_reelle: null,
+      completee: false
     })
 
     if (error) {
@@ -76,7 +77,7 @@ export async function PATCH(req: NextRequest) {
 
     const { error } = await supabase
       .from('seances')
-      .update({ duree_reelle })
+      .update({ duree_reelle, completee: true })
       .eq('id', id)
 
     if (error) {
