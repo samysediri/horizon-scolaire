@@ -1,14 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import Link from 'next/link';
 
 export default function DashboardAdmin() {
   const router = useRouter();
+  const supabase = useSupabaseClient();
 
   const handleLogout = async () => {
-    const res = await fetch('/auth/logout', { method: 'POST' });
-    if (res.ok) router.push('/login');
+    await supabase.auth.signOut();
+    router.push('/login');
   };
 
   return (
