@@ -1,67 +1,44 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { email, nom, role = 'tuteur' } = body;
+  const { email, nom, role } = body;
 
-  const supabase = createClient();
-
-  // Authentifier l'utilisateur actuel
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Seuls les admins peuvent inviter
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('uuid', user?.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'User not allowed' }, { status: 403 });
+  if (!email || !nom || !role) {
+    return NextResponse.json({ error: 'Champs manquants.' }, { status: 400 });
   }
 
-  // Créer l'utilisateur via Supabase Auth
-  const { data, error } = await supabase.auth.admin.inviteUser({
-    email,
-    options: {
-      data: { nom, password_created: false },
-    },
-  });
-
-  if (error) {
-    console.error('Erreur invitation :', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Insérer dans la table profiles
-  const insertProfile = await supabase.from('profiles').insert({
-    uuid: data.user?.id,
-    nom,
-    email,
-    role,
-  });
-
-  if (insertProfile.error) {
-    console.error('Erreur insert profile :', insertProfile.error);
-    return NextResponse.json({ error: 'Erreur insert profile' }, { status: 500 });
-  }
-
-  // Si tuteur, insérer dans tuteurs
-  if (role === 'tuteur') {
-    const insertTuteur = await supabase.from('tuteurs').insert({
-      uuid: data.user?.id,
-      nom,
+  try {
+    // Créer l'utilisateur sans mot de passe (il recevra un lien magique)
+    const { data: user, error: signUpError } = await supabase.auth.admin.createUser({
       email,
+      email_confirm: true,
+      user_metadata: { nom },
     });
 
-    if (insertTuteur.error) {
-      console.error('Erreur insert tuteur :', insertTuteur.error);
-      return NextResponse.json({ error: 'Erreur insert tuteur' }, { status: 500 });
-    }
-  }
+    if (signUpError) throw signUpError;
 
-  return NextResponse.json({ success: true });
+    // Ajouter dans la table "profiles"
+    const { error: insertError } = await supabase.from('profiles').insert([
+      {
+        uuid: user.user?.id,
+        email,
+        nom,
+        role,
+      },
+    ]);
+
+    if (insertError) throw insertError;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('[INVITE USER ERROR]', error);
+    return NextResponse.json({ error: error.message || 'Erreur serveur' }, { status: 500 });
+  }
 }
