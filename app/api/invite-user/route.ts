@@ -1,44 +1,43 @@
 import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  const { email, nom, role } = body;
+export async function POST(req: NextRequest) {
+  const { email, role, metadata } = await req.json();
+  const { prenom, nom } = metadata || {};
 
-  if (!email || !nom || !role) {
-    return NextResponse.json({ error: 'Champs manquants.' }, { status: 400 });
+  if (!email || !role) {
+    return NextResponse.json({ error: 'Email et rôle requis.' }, { status: 400 });
   }
 
-  try {
-    // Créer l'utilisateur sans mot de passe (il recevra un lien magique)
-    const { data: user, error: signUpError } = await supabase.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      user_metadata: { nom },
-    });
+  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
 
-    if (signUpError) throw signUpError;
-
-    // Ajouter dans la table "profiles"
-    const { error: insertError } = await supabase.from('profiles').insert([
-      {
-        uuid: user.user?.id,
-        email,
-        nom,
-        role,
-      },
-    ]);
-
-    if (insertError) throw insertError;
-
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('[INVITE USER ERROR]', error);
-    return NextResponse.json({ error: error.message || 'Erreur serveur' }, { status: 500 });
+  if (error) {
+    console.error('[Invite] Erreur en invitant:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  const userId = data?.user?.id;
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Impossible de récupérer le user ID.' }, { status: 500 });
+  }
+
+  const { error: profileError } = await supabase.from('profiles').insert({
+    id: userId,
+    email,
+    role,
+    prenom,
+    nom,
+  });
+
+  if (profileError) {
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }
