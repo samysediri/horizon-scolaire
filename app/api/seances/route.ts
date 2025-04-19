@@ -75,14 +75,29 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'ID ou durée réelle manquante' }, { status: 400 })
     }
 
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('seances')
       .update({ duree_reelle, completee: true })
       .eq('id', id)
 
-    if (error) {
-      console.error('[API] Erreur mise à jour durée réelle:', error.message)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (updateError) {
+      console.error('[API] Erreur mise à jour durée réelle:', updateError.message)
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    }
+
+    const baseUrl = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : 'https://horizonscolaire.vercel.app'
+
+    const factureRes = await fetch(`${baseUrl}/api/factures/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seance_id: id })
+    })
+
+    if (!factureRes.ok) {
+      const errData = await factureRes.json()
+      return NextResponse.json({ error: errData.error || 'Erreur lors de la mise à jour de la facture' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
