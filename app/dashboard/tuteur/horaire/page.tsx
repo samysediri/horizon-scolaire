@@ -121,14 +121,25 @@ export default function HoraireTuteur() {
   const enregistrerDureeReelle = async (id: string) => {
     const input = prompt('Durée réelle en minutes?');
     if (!input || isNaN(Number(input))) return alert('Valeur invalide');
+
+    const duree = Number(input);
+
     const res = await fetch('/api/seances', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, duree_reelle: Number(input) })
+      body: JSON.stringify({ id, duree_reelle: duree, completee: true })
     });
+
     const data = await res.json();
     if (!res.ok) return alert(data?.error || 'Erreur');
-    alert('Durée enregistrée.');
+
+    await fetch('/api/factures/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seance_id: id })
+    });
+
+    alert('Séance complétée et ajoutée à la facture!');
     location.reload();
   };
 
