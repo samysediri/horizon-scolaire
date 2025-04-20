@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ID de séance manquant' }, { status: 400 })
     }
 
-    // Récupérer les infos de la séance
     const { data: seance, error: seanceError } = await supabase
       .from('seances')
       .select('id, duree_reelle, tuteur_id, eleve_id')
@@ -26,7 +25,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Séance non trouvée' }, { status: 404 })
     }
 
-    // Récupérer le tuteur (pour le taux horaire)
     const { data: tuteur } = await supabase
       .from('tuteurs')
       .select('taux_horaire')
@@ -37,7 +35,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Taux horaire non trouvé pour le tuteur' }, { status: 404 })
     }
 
-    // Récupérer le parent de l'élève à partir de la table de liaison
     const { data: parentLink, error: parentLinkError } = await supabase
       .from('eleves_parents')
       .select('parent_id')
@@ -52,7 +49,6 @@ export async function POST(req: NextRequest) {
     const now = new Date()
     const mois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-    // Vérifier s'il existe déjà une facture pour ce mois et ce parent
     const { data: factureExistante } = await supabase
       .from('factures')
       .select('*')
@@ -61,12 +57,23 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (factureExistante) {
-      const { error: updateError } = await supabase
-        .from('factures')
-        .update({ montant_total: factureExistante.montant_total + montant })
-        .eq('id', factureExistante.id)
+      const nouveauMontant = factureExistante.montant_total + montant
 
-      if (updateError) throw updateError
+      if (nouveauMontant <= 0) {
+        const { error: deleteError } = await supabase
+          .from('factures')
+          .delete()
+          .eq('id', factureExistante.id)
+
+        if (deleteError) throw deleteError
+      } else {
+        const { error: updateError } = await supabase
+          .from('factures')
+          .update({ montant_total: nouveauMontant })
+          .eq('id', factureExistante.id)
+
+        if (updateError) throw updateError
+      }
     } else {
       const { error: insertError } = await supabase.from('factures').insert({
         parent_id: parentLink.parent_id,
