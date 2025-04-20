@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     const now = new Date()
     const mois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
+    // Vérifier s'il existe déjà une facture pour ce mois et ce parent
     const { data: factureExistante } = await supabase
       .from('factures')
       .select('*')
@@ -81,7 +82,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    console.error('[API] Erreur facture :', err.message)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[API] Erreur facture (brute) :', err)
+    const message = typeof err?.message === 'string' ? err.message : JSON.stringify(err)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
