@@ -52,7 +52,6 @@ export async function POST(req: NextRequest) {
     const now = new Date()
     const mois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-    // Vérifier s'il existe déjà une facture pour ce mois et ce parent
     const { data: factureExistante } = await supabase
       .from('factures')
       .select('*')
