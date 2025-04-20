@@ -68,12 +68,14 @@ export async function POST(req: NextRequest) {
           .from('factures')
           .delete()
           .eq('id', factureExistante.id)
+
         if (deleteError) throw deleteError
       } else {
         const { error: updateError } = await supabase
           .from('factures')
           .update({ montant_total: nouveauMontant })
           .eq('id', factureExistante.id)
+
         if (updateError) throw updateError
       }
     } else {
@@ -85,10 +87,10 @@ export async function POST(req: NextRequest) {
         payee: false,
         created_at: now.toISOString(),
       })
+
       if (insertError) throw insertError
     }
 
-    // ✅ Marquer la séance comme facturée
     const { error: markError } = await supabase
       .from('seances')
       .update({ facturée: true })
