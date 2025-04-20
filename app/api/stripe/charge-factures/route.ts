@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2022-11-15', // ← version Stripe reconnue comme stable
+  apiVersion: '2022-11-15',
 });
 
 const supabase = createClient(
@@ -23,13 +23,13 @@ export async function POST() {
     const now = new Date();
 
     for (const facture of factures) {
-      const { data: parent } = await supabase
+      const { data: parent, error: parentError } = await supabase
         .from('parents')
         .select('stripe_customer_id')
         .eq('id', facture.parent_id)
         .single();
 
-      if (!parent?.stripe_customer_id) {
+      if (parentError || !parent?.stripe_customer_id) {
         console.warn(`[Stripe] Aucune carte enregistrée pour le parent ${facture.parent_id}`);
         continue;
       }
@@ -42,7 +42,10 @@ export async function POST() {
         currency: 'cad',
         confirm: true,
         description: `Paiement facture #${facture.id} - ${now.toLocaleDateString('fr-CA')}`,
-        automatic_payment_methods: { enabled: true }
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never',
+        },
       });
 
       if (paymentIntent.status === 'succeeded') {
@@ -59,5 +62,3 @@ export async function POST() {
     return NextResponse.json({ error: err.message || 'Erreur serveur' }, { status: 500 });
   }
 }
-export const dynamic = 'force-dynamic';
-
