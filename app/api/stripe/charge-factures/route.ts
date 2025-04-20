@@ -2,10 +2,9 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Initialisation Stripe sans spécifier de version
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// ✅ Initialisation Stripe sans apiVersion explicite
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
 
-// Initialisation Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -13,7 +12,6 @@ const supabase = createClient(
 
 export async function POST() {
   try {
-    // Récupérer toutes les factures impayées
     const { data: factures, error } = await supabase
       .from('factures')
       .select('id, parent_id, montant_total')
@@ -24,7 +22,6 @@ export async function POST() {
     const now = new Date();
 
     for (const facture of factures) {
-      // Récupérer le parent pour avoir la stripe_customer_id
       const { data: parent } = await supabase
         .from('parents')
         .select('stripe_customer_id')
@@ -36,22 +33,17 @@ export async function POST() {
         continue;
       }
 
-      // Convertir montant en cents pour Stripe
       const montantCents = Math.round(facture.montant_total * 100);
 
-      // Créer la charge
       const paymentIntent = await stripe.paymentIntents.create({
         customer: parent.stripe_customer_id,
         amount: montantCents,
         currency: 'cad',
         confirm: true,
         description: `Paiement facture #${facture.id} - ${now.toLocaleDateString('fr-CA')}`,
-        automatic_payment_methods: {
-          enabled: true
-        }
+        automatic_payment_methods: { enabled: true }
       });
 
-      // Marquer la facture comme payée si le paiement a été confirmé
       if (paymentIntent.status === 'succeeded') {
         await supabase
           .from('factures')
