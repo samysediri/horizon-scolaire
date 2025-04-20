@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     const { data: seance, error: seanceError } = await supabase
       .from('seances')
-      .select('id, duree_reelle, tuteur_id, eleve_id, facturée')
+      .select('id, duree_reelle, tuteur_id, eleve_id, facturee')
       .eq('id', seance_id)
       .single()
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Séance non trouvée' }, { status: 404 })
     }
 
-    if (seance.facturée) {
+    if (seance.facturee) {
       return NextResponse.json({ success: false, message: 'Séance déjà facturée' })
     }
 
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     const { error: markError } = await supabase
       .from('seances')
-      .update({ facturée: true })
+      .update({ facturee: true })
       .eq('id', seance_id)
 
     if (markError) throw markError
