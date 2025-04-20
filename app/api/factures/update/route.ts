@@ -37,14 +37,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Taux horaire non trouvé pour le tuteur' }, { status: 404 })
     }
 
-    // Récupérer l'élève et son parent
-    const { data: eleve } = await supabase
-      .from('eleves')
+    // Récupérer le parent de l'élève à partir de la table de liaison
+    const { data: parentLink, error: parentLinkError } = await supabase
+      .from('eleves_parents')
       .select('parent_id')
-      .eq('id', seance.eleve_id)
+      .eq('eleve_id', seance.eleve_id)
       .single()
 
-    if (!eleve?.parent_id) {
+    if (parentLinkError || !parentLink?.parent_id) {
       return NextResponse.json({ error: 'Parent introuvable pour cet élève' }, { status: 404 })
     }
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const { data: factureExistante } = await supabase
       .from('factures')
       .select('*')
-      .eq('parent_id', eleve.parent_id)
+      .eq('parent_id', parentLink.parent_id)
       .eq('mois', mois)
       .single()
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       if (updateError) throw updateError
     } else {
       const { error: insertError } = await supabase.from('factures').insert({
-        parent_id: eleve.parent_id,
+        parent_id: parentLink.parent_id,
         mois,
         annee: now.getFullYear(),
         montant_total: montant,
