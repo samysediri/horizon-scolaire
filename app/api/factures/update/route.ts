@@ -17,12 +17,16 @@ export async function POST(req: NextRequest) {
 
     const { data: seance, error: seanceError } = await supabase
       .from('seances')
-      .select('id, duree_reelle, tuteur_id, eleve_id')
+      .select('id, duree_reelle, tuteur_id, eleve_id, facturée')
       .eq('id', seance_id)
       .single()
 
     if (seanceError || !seance) {
       return NextResponse.json({ error: 'Séance non trouvée' }, { status: 404 })
+    }
+
+    if (seance.facturée) {
+      return NextResponse.json({ success: false, message: 'Séance déjà facturée' })
     }
 
     const { data: tuteur } = await supabase
@@ -64,14 +68,12 @@ export async function POST(req: NextRequest) {
           .from('factures')
           .delete()
           .eq('id', factureExistante.id)
-
         if (deleteError) throw deleteError
       } else {
         const { error: updateError } = await supabase
           .from('factures')
           .update({ montant_total: nouveauMontant })
           .eq('id', factureExistante.id)
-
         if (updateError) throw updateError
       }
     } else {
@@ -83,9 +85,16 @@ export async function POST(req: NextRequest) {
         payee: false,
         created_at: now.toISOString(),
       })
-
       if (insertError) throw insertError
     }
+
+    // ✅ Marquer la séance comme facturée
+    const { error: markError } = await supabase
+      .from('seances')
+      .update({ facturée: true })
+      .eq('id', seance_id)
+
+    if (markError) throw markError
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
