@@ -12,6 +12,7 @@ export default function TuteurDashboard() {
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [salaire, setSalaire] = useState<number | null>(null);
+  const [nomTuteur, setNomTuteur] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -26,35 +27,36 @@ export default function TuteurDashboard() {
   }, [user]);
 
   useEffect(() => {
-    const fetchSalaire = async () => {
+    const fetchInfosTuteur = async () => {
       if (!user?.id) return;
 
       const now = new Date();
       const mois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-      const { data, error } = await supabase
+      const { data: seances, error: errorSeances } = await supabase
         .from('seances')
         .select('duree_reelle, completee')
         .eq('tuteur_id', user.id)
         .eq('completee', true);
 
-      if (error || !data) return;
+      if (errorSeances || !seances) return;
 
-      const { data: tuteur } = await supabase
+      const { data: tuteur, error: errorTuteur } = await supabase
         .from('tuteurs')
-        .select('taux_horaire')
+        .select('taux_horaire, nom')
         .eq('id', user.id)
         .single();
 
-      if (!tuteur?.taux_horaire) return;
+      if (errorTuteur || !tuteur?.taux_horaire) return;
 
-      const totalMinutes = data.reduce((acc, seance) => acc + (seance.duree_reelle || 0), 0);
+      const totalMinutes = seances.reduce((acc, s) => acc + (s.duree_reelle || 0), 0);
       const salaireEstime = (totalMinutes / 60) * tuteur.taux_horaire;
 
       setSalaire(salaireEstime);
+      setNomTuteur(tuteur.nom || null);
     };
 
-    fetchSalaire();
+    fetchInfosTuteur();
   }, [user]);
 
   const handleLogout = async () => {
@@ -69,7 +71,10 @@ export default function TuteurDashboard() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Bienvenue sur le tableau de bord Tuteur</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Bienvenue{nomTuteur ? `, ${nomTuteur}` : ''} !</h1>
+          <p className="text-gray-600">Tableau de bord Tuteur</p>
+        </div>
         <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded">
           Déconnexion
         </button>
