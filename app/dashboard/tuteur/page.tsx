@@ -12,7 +12,7 @@ export default function TuteurDashboard() {
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [salaire, setSalaire] = useState<number | null>(null);
-  const [nomTuteur, setNomTuteur] = useState<string | null>(null);
+  const [nomComplet, setNomComplet] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -43,7 +43,7 @@ export default function TuteurDashboard() {
 
       const { data: tuteur, error: errorTuteur } = await supabase
         .from('tuteurs')
-        .select('taux_horaire, nom')
+        .select('taux_horaire, prenom, nom')
         .eq('id', user.id)
         .single();
 
@@ -53,7 +53,7 @@ export default function TuteurDashboard() {
       const salaireEstime = (totalMinutes / 60) * tuteur.taux_horaire;
 
       setSalaire(salaireEstime);
-      setNomTuteur(tuteur.nom || null);
+      setNomComplet(`${tuteur.prenom || ''} ${tuteur.nom || ''}`.trim());
     };
 
     fetchInfosTuteur();
@@ -72,7 +72,9 @@ export default function TuteurDashboard() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Bienvenue{nomTuteur ? `, ${nomTuteur}` : ''} !</h1>
+          <h1 className="text-2xl font-bold">
+            Bienvenue{nomComplet ? `, ${nomComplet}` : ''} !
+          </h1>
           <p className="text-gray-600">Tableau de bord Tuteur</p>
         </div>
         <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded">
@@ -87,32 +89,18 @@ export default function TuteurDashboard() {
       )}
 
       <div className="space-y-3">
-        <Link
-          href="/dashboard/tuteur/eleves"
-          className="block text-blue-600 hover:underline"
-        >
+        <Link href="/dashboard/tuteur/eleves" className="block text-blue-600 hover:underline">
           📚 Voir mes élèves
         </Link>
-
-        <Link
-          href="/dashboard/tuteur/horaire"
-          className="block text-blue-600 hover:underline"
-        >
+        <Link href="/dashboard/tuteur/horaire" className="block text-blue-600 hover:underline">
           🗓️ Voir mon horaire
         </Link>
-
-        <Link
-          href="/dashboard/tuteur/heures"
-          className="block text-blue-600 hover:underline"
-        >
+        <Link href="/dashboard/tuteur/heures" className="block text-blue-600 hover:underline">
           ⏱️ Voir mes heures complétées
         </Link>
 
         {isAdmin && (
-          <Link
-            href="/dashboard/admin"
-            className="block text-green-600 hover:underline mt-4"
-          >
+          <Link href="/dashboard/admin" className="block text-green-600 hover:underline mt-4">
             🔐 Accéder au tableau de bord Admin
           </Link>
         )}
