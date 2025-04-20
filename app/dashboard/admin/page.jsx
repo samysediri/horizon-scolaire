@@ -8,33 +8,23 @@ import { useState } from 'react';
 export default function DashboardAdmin() {
   const router = useRouter();
   const supabase = useSupabaseClient();
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [testMsg, setTestMsg] = useState('');
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
   };
 
-  const handleTestFacturation = async () => {
-    setLoading(true);
-    setResult(null);
-
+  const handleTestFacture = async () => {
+    setTestMsg('Test en cours...');
     try {
       const res = await fetch('/api/stripe/charge-factures');
       const data = await res.json();
-
-      if (res.ok) {
-        setResult('✅ Factures test chargées avec succès.');
-      } else {
-        setResult(`❌ Erreur : ${data.error || 'Inconnue'}`);
-      }
-    } catch (err) {
-      console.error(err);
-      setResult('❌ Erreur réseau');
+      if (!res.ok) throw new Error(data?.error || 'Erreur');
+      setTestMsg(`✅ Succès : ${data.message || 'Factures simulées'}`);
+    } catch (err: any) {
+      setTestMsg(`❌ Erreur : ${err.message}`);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -64,16 +54,15 @@ export default function DashboardAdmin() {
         </Link>
 
         <button
-          onClick={handleTestFacturation}
-          disabled={loading}
-          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 disabled:opacity-50"
+          onClick={handleTestFacture}
+          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
         >
-          {loading ? 'Traitement en cours...' : '💳 Tester facturation Stripe'}
+          Tester Stripe (facturation)
         </button>
 
-        {result && (
-          <p className={`text-sm ${result.startsWith('✅') ? 'text-green-700' : 'text-red-700'}`}>
-            {result}
+        {testMsg && (
+          <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap">
+            {testMsg}
           </p>
         )}
 
