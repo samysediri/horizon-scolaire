@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest) {
 
     const baseUrl = process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
-      : 'https://horizonscolaire.vercel.app'
+      : 'https://horizon-scolaire.vercel.app'
 
     const factureRes = await fetch(`${baseUrl}/api/factures/update`, {
       method: 'POST',
@@ -95,13 +95,22 @@ export async function PATCH(req: NextRequest) {
       body: JSON.stringify({ seance_id: id })
     })
 
-    if (!factureRes.ok) {
-      const errData = await factureRes.json()
-      return NextResponse.json({ error: errData.error || 'Erreur lors de la mise à jour de la facture' }, { status: 500 })
+    const raw = await factureRes.text()
+    console.log('[FACTURE API] réponse brute :', raw)
+
+    try {
+      const json = JSON.parse(raw)
+      if (!factureRes.ok) {
+        return NextResponse.json({ error: json?.error || 'Erreur mise à jour facture' }, { status: 500 })
+      }
+    } catch (parseError) {
+      console.error('[FACTURE API] erreur de parsing JSON:', parseError)
+      return NextResponse.json({ error: 'Réponse invalide du endpoint facture' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
+    console.error('[API] Erreur PATCH séance:', err)
     return NextResponse.json({ error: 'Erreur serveur : ' + err.message }, { status: 500 })
   }
 }
