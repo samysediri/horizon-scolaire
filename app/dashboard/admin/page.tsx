@@ -8,17 +8,19 @@ import { useState } from 'react';
 export default function DashboardAdmin() {
   const router = useRouter();
   const supabase = useSupabaseClient();
-  const [testMsg, setTestMsg] = useState('');
+  const [testMsg, setTestMsg] = useState<string | null>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
   };
 
-  const handleTestFacture = async () => {
-    setTestMsg('Test en cours...');
+  const testerStripe = async () => {
+    setTestMsg(null);
     try {
-      const res = await fetch('/api/stripe/charge-factures');
+      const res = await fetch('/api/stripe/charge-factures', {
+        method: 'POST',
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Erreur');
       setTestMsg(`✅ Succès : ${data.message || 'Factures simulées'}`);
@@ -54,16 +56,16 @@ export default function DashboardAdmin() {
         </Link>
 
         <button
-          onClick={handleTestFacture}
-          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+          onClick={testerStripe}
+          className="bg-purple-600 text-white px-4 py-2 rounded text-center hover:bg-purple-700"
         >
           Tester Stripe (facturation)
         </button>
 
         {testMsg && (
-          <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap">
+          <div className="text-sm text-red-600 bg-red-100 border border-red-300 p-2 rounded">
             {testMsg}
-          </p>
+          </div>
         )}
 
         <button
