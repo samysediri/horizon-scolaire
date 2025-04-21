@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2022-11-15',
@@ -19,18 +19,26 @@ export async function POST() {
       .eq('payee', false);
 
     if (error) throw error;
-
     const now = new Date();
 
     for (const facture of factures) {
-      const { data: parent, error: parentError } = await supabase
+      const { data: parent } = await supabase
         .from('parents')
         .select('stripe_customer_id')
         .eq('id', facture.parent_id)
         .single();
 
-      if (parentError || !parent?.stripe_customer_id) {
+      if (!parent?.stripe_customer_id) {
         console.warn(`[Stripe] Aucune carte enregistrée pour le parent ${facture.parent_id}`);
+        continue;
+      }
+
+      // Vérifie si le customer a une carte par défaut
+      const customer = await stripe.customers.retrieve(parent.stripe_customer_id);
+      const defaultPaymentMethod = (customer as any).invoice_settings?.default_payment_method;
+
+      if (!defaultPaymentMethod) {
+        console.warn(`[Stripe] Aucun moyen de paiement par défaut pour ${parent.stripe_customer_id}`);
         continue;
       }
 
@@ -42,6 +50,7 @@ export async function POST() {
         currency: 'cad',
         confirm: true,
         description: `Paiement facture #${facture.id} - ${now.toLocaleDateString('fr-CA')}`,
+        return_url: 'https://horizon-scolaire.vercel.app/dashboard/confirmation', // URL fictive de redirection
         automatic_payment_methods: {
           enabled: true,
           allow_redirects: 'never',
