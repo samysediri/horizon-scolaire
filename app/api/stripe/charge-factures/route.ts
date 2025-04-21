@@ -19,42 +19,40 @@ export async function POST() {
       .eq('payee', false);
 
     if (error) throw error;
+
     const now = new Date();
 
     for (const facture of factures) {
-      const { data: parent } = await supabase
+      const { data: parent, error: errParent } = await supabase
         .from('parents')
         .select('stripe_customer_id')
         .eq('id', facture.parent_id)
         .single();
 
-      if (!parent?.stripe_customer_id) {
-        console.warn(`[Stripe] Aucune carte enregistrée pour le parent ${facture.parent_id}`);
+      if (errParent || !parent?.stripe_customer_id) {
+        console.warn(`[Stripe] Aucune carte pour parent ${facture.parent_id}`);
         continue;
       }
 
-      // Vérifie si le customer a une carte par défaut
+      // 🔍 Récupérer la source par défaut (la carte) du client Stripe
       const customer = await stripe.customers.retrieve(parent.stripe_customer_id);
-      const defaultPaymentMethod = (customer as any).invoice_settings?.default_payment_method;
+      if (!customer || typeof customer === 'string') continue;
 
-      if (!defaultPaymentMethod) {
-        console.warn(`[Stripe] Aucun moyen de paiement par défaut pour ${parent.stripe_customer_id}`);
+      const defaultSource = customer.invoice_settings?.default_payment_method || customer.default_source;
+
+      if (!defaultSource) {
+        console.warn(`[Stripe] Aucun moyen de paiement par défaut pour ${facture.parent_id}`);
         continue;
       }
-
-      const montantCents = Math.round(facture.montant_total * 100);
 
       const paymentIntent = await stripe.paymentIntents.create({
         customer: parent.stripe_customer_id,
-        amount: montantCents,
+        amount: Math.round(facture.montant_total * 100),
         currency: 'cad',
+        payment_method: typeof defaultSource === 'string' ? defaultSource : undefined,
+        off_session: true,
         confirm: true,
         description: `Paiement facture #${facture.id} - ${now.toLocaleDateString('fr-CA')}`,
-        return_url: 'https://horizon-scolaire.vercel.app/dashboard/confirmation', // URL fictive de redirection
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: 'never',
-        },
       });
 
       if (paymentIntent.status === 'succeeded') {
