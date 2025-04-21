@@ -23,36 +23,41 @@ export async function POST() {
     const now = new Date();
 
     for (const facture of factures) {
-      const { data: parent, error: errParent } = await supabase
+      const { data: parent } = await supabase
         .from('parents')
         .select('stripe_customer_id')
         .eq('id', facture.parent_id)
         .single();
 
-      if (errParent || !parent?.stripe_customer_id) {
-        console.warn(`[Stripe] Aucune carte pour parent ${facture.parent_id}`);
+      if (!parent?.stripe_customer_id) {
+        console.warn(`[Stripe] Aucune carte enregistrée pour le parent ${facture.parent_id}`);
         continue;
       }
 
-      // 🔍 Récupérer la source par défaut (la carte) du client Stripe
-      const customer = await stripe.customers.retrieve(parent.stripe_customer_id);
-      if (!customer || typeof customer === 'string') continue;
+      const customer = await stripe.customers.retrieve(parent.stripe_customer_id) as Stripe.Customer;
 
-      const defaultSource = customer.invoice_settings?.default_payment_method || customer.default_source;
+      const defaultSource =
+        customer.invoice_settings?.default_payment_method ||
+        (typeof customer.default_source === 'string' ? customer.default_source : null);
 
       if (!defaultSource) {
         console.warn(`[Stripe] Aucun moyen de paiement par défaut pour ${facture.parent_id}`);
         continue;
       }
 
+      const montantCents = Math.round(facture.montant_total * 100);
+
       const paymentIntent = await stripe.paymentIntents.create({
         customer: parent.stripe_customer_id,
-        amount: Math.round(facture.montant_total * 100),
+        amount: montantCents,
         currency: 'cad',
-        payment_method: typeof defaultSource === 'string' ? defaultSource : undefined,
-        off_session: true,
+        payment_method: defaultSource,
         confirm: true,
         description: `Paiement facture #${facture.id} - ${now.toLocaleDateString('fr-CA')}`,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never',
+        }
       });
 
       if (paymentIntent.status === 'succeeded') {
