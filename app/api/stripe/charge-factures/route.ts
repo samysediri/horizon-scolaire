@@ -36,11 +36,14 @@ export async function POST() {
 
       const customer = await stripe.customers.retrieve(parent.stripe_customer_id) as Stripe.Customer;
 
-      const defaultSource =
-        customer.invoice_settings?.default_payment_method ||
-        (typeof customer.default_source === 'string' ? customer.default_source : null);
+      const defaultSourceId =
+        typeof customer.invoice_settings?.default_payment_method === 'string'
+          ? customer.invoice_settings.default_payment_method
+          : typeof customer.default_source === 'string'
+          ? customer.default_source
+          : null;
 
-      if (!defaultSource) {
+      if (!defaultSourceId) {
         console.warn(`[Stripe] Aucun moyen de paiement par défaut pour ${facture.parent_id}`);
         continue;
       }
@@ -51,7 +54,7 @@ export async function POST() {
         customer: parent.stripe_customer_id,
         amount: montantCents,
         currency: 'cad',
-        payment_method: defaultSource,
+        payment_method: defaultSourceId,
         confirm: true,
         description: `Paiement facture #${facture.id} - ${now.toLocaleDateString('fr-CA')}`,
         automatic_payment_methods: {
