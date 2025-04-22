@@ -151,8 +151,8 @@ export default function HoraireTuteur() {
   const allStarts = seances.map(s => new Date(s.debut));
   const allEnds = seances.map(s => new Date(s.fin));
 
-  const minTime = allStarts.length ? new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime()))) : defaultMin;
-  const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
+  const minTime = new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime())));
+  const maxTime = new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime())));
 
   return (
     <div className="p-6 relative">
