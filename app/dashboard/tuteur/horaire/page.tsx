@@ -143,16 +143,11 @@ export default function HoraireTuteur() {
     location.reload();
   };
 
-  const defaultMin = new Date();
-  defaultMin.setHours(6, 0, 0, 0);
-  const defaultMax = new Date();
-  defaultMax.setHours(22, 0, 0, 0);
+  const minTime = new Date();
+  minTime.setHours(6, 0, 0, 0);
 
-  const allStarts = seances.map(s => new Date(s.debut));
-  const allEnds = seances.map(s => new Date(s.fin));
-
-  const minTime = new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime())));
-  const maxTime = new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime())));
+  const maxTime = new Date();
+  maxTime.setHours(22, 0, 0, 0);
 
   return (
     <div className="p-6 relative">
