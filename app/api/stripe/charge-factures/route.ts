@@ -64,10 +64,16 @@ export async function POST() {
       });
 
       if (paymentIntent.status === 'succeeded') {
-        await supabase
+        const { error: updateError, data: updateData } = await supabase
           .from('factures')
           .update({ payee: true, date_paiement: now.toISOString() })
           .eq('id', facture.id);
+
+        if (updateError) {
+          console.error('[SUPABASE] Erreur lors de la mise à jour de la facture:', updateError);
+        } else {
+          console.log('[SUPABASE] Mise à jour réussie:', updateData);
+        }
       }
     }
 
