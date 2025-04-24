@@ -30,7 +30,9 @@ export default function HeuresCompletees() {
         return;
       }
 
-      setPrenom(`${profile.prenom} ${profile.nom}`.trim());
+      setPrenom(`${(profile as any).prenom} ${(profile as any).nom}`.trim());
+
+
 
 
       const start = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
