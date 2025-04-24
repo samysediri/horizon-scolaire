@@ -145,92 +145,97 @@ export default function HoraireTuteur() {
 
   const minTime = new Date();
   minTime.setHours(6, 0, 0, 0);
-
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
 
   return (
-    <div className="p-6 relative">
-      <h1 className="text-2xl font-bold mb-4">🗓️ Horaire Tuteur</h1>
+    <div className="p-6 sm:p-10 bg-gray-100 min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">🗓️ Horaire Tuteur</h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <select onChange={e => setSelectedEleveId(e.target.value)} className="p-2 border rounded">
-          <option value=''>Sélectionner un élève</option>
-          {eleves.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
-        </select>
-        <input type="date" onChange={e => setNewSeance({ ...newSeance, date: e.target.value })} className="p-2 border rounded" />
-        <input type="time" onChange={e => setNewSeance({ ...newSeance, heure: e.target.value })} className="p-2 border rounded" />
-        <input type="number" placeholder="Durée (min)" onChange={e => setNewSeance({ ...newSeance, duree: e.target.value })} className="p-2 border rounded" />
-      </div>
-      <button onClick={handleAddSeance} className="bg-green-600 text-white px-4 py-2 rounded">Ajouter</button>
+        <div className="bg-white p-6 rounded-xl shadow-md mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <select onChange={e => setSelectedEleveId(e.target.value)} className="p-2 border rounded w-full">
+              <option value=''>Sélectionner un élève</option>
+              {eleves.map(e => <option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
+            </select>
+            <input type="date" onChange={e => setNewSeance({ ...newSeance, date: e.target.value })} className="p-2 border rounded w-full" />
+            <input type="time" onChange={e => setNewSeance({ ...newSeance, heure: e.target.value })} className="p-2 border rounded w-full" />
+            <input type="number" placeholder="Durée (min)" onChange={e => setNewSeance({ ...newSeance, duree: e.target.value })} className="p-2 border rounded w-full" />
+          </div>
+          <button onClick={handleAddSeance} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow">Ajouter la séance</button>
+        </div>
 
-      <div className="h-[60vh] mt-6">
-        <Calendar
-          localizer={localizer}
-          events={seances.map(s => ({
-            id: s.id,
-            title: s.eleve_nom || 'Séance',
-            start: new Date(s.debut),
-            end: new Date(s.fin),
-            ...s
-          }))}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '100%', fontSize: '0.75rem' }}
-          defaultView={Views.WEEK}
-          min={minTime}
-          max={maxTime}
-          scrollToTime={minTime}
-          onSelectEvent={handleSelectEvent}
-        />
-      </div>
-
-      {popup && (
-        <div
-          className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
-          style={{ top: popup.y + 10, left: popup.x + 10 }}
-        >
-          <h3 className="text-md font-bold mb-1">{popup.seance.eleve_nom}</h3>
-          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
-          {popup.seance.duree_reelle ? (
-            <p className="text-green-600 font-semibold">✔️ Complété ({popup.seance.duree_reelle} min)</p>
-          ) : (
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => {
-                  marquerSeanceVue(popup.seance.id);
-                  window.open(popup.seance.lien_tuteur, '_blank');
-                }}
-                className="bg-blue-500 text-white px-3 py-1 rounded"
-              >
-                Accéder
-              </button>
-              {estVue(popup.seance.id) && (
-                <button
-                  className="bg-purple-600 text-white px-3 py-1 rounded"
-                  onClick={() => enregistrerDureeReelle(popup.seance.id)}
-                >
-                  Compléter
-                </button>
-              )}
-              <button
-                onClick={() => handleDeleteSeance(popup.seance.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded"
-              >
-                Supprimer
-              </button>
-            </div>
-          )}
-          <div className="mt-2">
-            <button
-              onClick={() => setPopup(null)}
-              className="bg-gray-400 text-white px-3 py-1 rounded"
-            >
-              Fermer
-            </button>
+        <div className="bg-white p-4 rounded-xl shadow-md">
+          <div className="h-[65vh]">
+            <Calendar
+              localizer={localizer}
+              events={seances.map(s => ({
+                id: s.id,
+                title: s.eleve_nom || 'Séance',
+                start: new Date(s.debut),
+                end: new Date(s.fin),
+                ...s
+              }))}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: '100%', fontSize: '0.75rem' }}
+              defaultView={Views.WEEK}
+              min={minTime}
+              max={maxTime}
+              scrollToTime={minTime}
+              onSelectEvent={handleSelectEvent}
+            />
           </div>
         </div>
-      )}
+
+        {popup && (
+          <div
+            className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
+            style={{ top: popup.y + 10, left: popup.x + 10 }}
+          >
+            <h3 className="text-md font-bold mb-1">{popup.seance.eleve_nom}</h3>
+            <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
+            {popup.seance.duree_reelle ? (
+              <p className="text-green-600 font-semibold">✔️ Complété ({popup.seance.duree_reelle} min)</p>
+            ) : (
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    marquerSeanceVue(popup.seance.id);
+                    window.open(popup.seance.lien_tuteur, '_blank');
+                  }}
+                  className="bg-blue-500 text-white px-3 py-1 rounded"
+                >
+                  Accéder
+                </button>
+                {estVue(popup.seance.id) && (
+                  <button
+                    className="bg-purple-600 text-white px-3 py-1 rounded"
+                    onClick={() => enregistrerDureeReelle(popup.seance.id)}
+                  >
+                    Compléter
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDeleteSeance(popup.seance.id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Supprimer
+                </button>
+              </div>
+            )}
+            <div className="mt-2 text-right">
+              <button
+                onClick={() => setPopup(null)}
+                className="bg-gray-400 text-white px-3 py-1 rounded"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
