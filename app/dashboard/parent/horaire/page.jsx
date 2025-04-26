@@ -16,10 +16,10 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 export default function HoraireParent() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [enfants, setEnfants] = useState<any[]>([]);
+  const [enfants, setEnfants] = useState([]);
   const [selectedEnfantId, setSelectedEnfantId] = useState('');
-  const [seances, setSeances] = useState<any[]>([]);
-  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
+  const [seances, setSeances] = useState([]);
+  const [popup, setPopup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState('Chargement en cours...');
 
@@ -72,7 +72,7 @@ export default function HoraireParent() {
     fetchSeances();
   }, [selectedEnfantId, supabase]);
 
-  const handleSelectEvent = (event: any, e: any) => {
+  const handleSelectEvent = (event, e) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
   };
@@ -108,7 +108,7 @@ export default function HoraireParent() {
         <div className="h-[30vh] bg-white p-4 rounded shadow">
           <Calendar
             localizer={localizer}
-            events={seances.map(s => ({
+            events={seances.map((s) => ({
               id: s.id,
               title: s.sujet || 'Séance',
               start: new Date(s.debut),
@@ -135,7 +135,9 @@ export default function HoraireParent() {
           style={{ top: popup.y + 10, left: popup.x + 10 }}
         >
           <h3 className="text-md font-bold mb-1">Séance</h3>
-          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}</p>
+          <p className="text-sm mb-2">
+            🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}
+          </p>
           {popup.seance.lien_eleve && (
             <button
               onClick={() => window.open(popup.seance.lien_eleve, '_blank')}
