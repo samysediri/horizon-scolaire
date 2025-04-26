@@ -16,10 +16,10 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 export default function HoraireParent() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [enfants, setEnfants] = useState<any[]>([]);
+  const [enfants, setEnfants] = useState([]);
   const [selectedEnfantId, setSelectedEnfantId] = useState('');
-  const [seances, setSeances] = useState<any[]>([]);
-  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
+  const [seances, setSeances] = useState([]);
+  const [popup, setPopup] = useState(null);
   const [debug, setDebug] = useState('Chargement en cours...');
   const [loading, setLoading] = useState(true);
 
@@ -88,7 +88,7 @@ export default function HoraireParent() {
     fetchSeances();
   }, [selectedEnfantId, supabase]);
 
-  const handleSelectEvent = (event: any, e: any) => {
+  const handleSelectEvent = (event, e) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
   };
