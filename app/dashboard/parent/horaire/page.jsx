@@ -16,30 +16,47 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 export default function HoraireParent() {
   const user = useUser();
   const supabase = useSupabaseClient();
-
-  const [enfants, setEnfants] = useState([]);
+  const [enfants, setEnfants] = useState<any[]>([]);
   const [selectedEnfantId, setSelectedEnfantId] = useState('');
-  const [seances, setSeances] = useState([]);
-  const [popup, setPopup] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [seances, setSeances] = useState<any[]>([]);
+  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
   const [debug, setDebug] = useState('Chargement en cours...');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEnfants = async () => {
       if (!user) return;
 
-      setDebug('🔄 Chargement de vos enfants...');
+      setDebug('🔄 Chargement des enfants...');
 
-      const { data, error } = await supabase
+      const { data: liendata, error: lienerror } = await supabase
         .from('eleves_parents')
-        .select('eleves (id, prenom, nom)')
+        .select('eleve_id')
         .eq('parent_id', user.id);
 
-      if (error) {
-        setDebug(`❌ Erreur : ${error.message}`);
+      if (lienerror || !liendata) {
+        setDebug(`❌ Erreur de lien : ${lienerror?.message}`);
+        setLoading(false);
+        return;
+      }
+
+      const eleveIds = liendata.map((lien) => lien.eleve_id);
+
+      if (eleveIds.length === 0) {
+        setDebug('⚠️ Aucun enfant trouvé.');
+        setLoading(false);
+        return;
+      }
+
+      const { data: elevesData, error: elevesError } = await supabase
+        .from('eleves')
+        .select('id, prenom, nom')
+        .in('id', eleveIds);
+
+      if (elevesError) {
+        setDebug(`❌ Erreur de chargement des élèves : ${elevesError.message}`);
       } else {
-        const enfantsTrouves = data.map((e) => e.eleves);
-        setEnfants(enfantsTrouves || []);
+        setEnfants(elevesData || []);
         setDebug('✅ Enfants chargés');
       }
 
@@ -53,7 +70,6 @@ export default function HoraireParent() {
     const fetchSeances = async () => {
       if (!selectedEnfantId) return;
 
-      setLoading(true);
       setDebug('🔄 Chargement des séances...');
 
       const { data, error } = await supabase
@@ -62,26 +78,23 @@ export default function HoraireParent() {
         .eq('eleve_id', selectedEnfantId);
 
       if (error) {
-        setDebug(`❌ Erreur : ${error.message}`);
+        setDebug(`❌ Erreur des séances : ${error.message}`);
       } else {
         setSeances(data || []);
         setDebug('✅ Séances chargées');
       }
-
-      setLoading(false);
     };
 
     fetchSeances();
   }, [selectedEnfantId, supabase]);
 
-  const handleSelectEvent = (event, e) => {
+  const handleSelectEvent = (event: any, e: any) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
   };
 
   const minTime = new Date();
   minTime.setHours(6, 0, 0, 0);
-
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
 
@@ -107,7 +120,7 @@ export default function HoraireParent() {
       </div>
 
       {selectedEnfantId ? (
-        <div className="h-[75vh] bg-white p-6 rounded-xl shadow-md">
+        <div className="h-[75vh] bg-white p-4 rounded shadow">
           <Calendar
             localizer={localizer}
             events={seances.map((s) => ({
@@ -119,7 +132,7 @@ export default function HoraireParent() {
             }))}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: '100%', fontSize: '0.85rem' }}
+            style={{ height: '100%', fontSize: '0.8rem' }}
             defaultView={Views.WEEK}
             min={minTime}
             max={maxTime}
