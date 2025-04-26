@@ -27,19 +27,38 @@ export default function HoraireParent() {
     const fetchEnfants = async () => {
       if (!user) return;
 
-      setDebug('🔄 Chargement de vos enfants...');
+      setDebug('🔄 Chargement des enfants...');
 
-      const { data: liens, error } = await supabase
+      const { data: relations, error: errorRelations } = await supabase
         .from('eleves_parents')
-        .select('eleves(id, prenom, nom)')
+        .select('eleve_id')
         .eq('parent_id', user.id);
 
-      if (error) {
-        console.error('Erreur fetch enfants:', error.message);
-        setDebug(`❌ Erreur : ${error.message}`);
+      if (errorRelations) {
+        console.error('Erreur relations enfants-parents:', errorRelations.message);
+        setDebug(`❌ Erreur : ${errorRelations.message}`);
+        setLoading(false);
+        return;
+      }
+
+      if (!relations || relations.length === 0) {
+        setDebug('Aucun enfant trouvé.');
+        setLoading(false);
+        return;
+      }
+
+      const eleveIds = relations.map(r => r.eleve_id);
+
+      const { data: enfantsData, error: errorEnfants } = await supabase
+        .from('eleves')
+        .select('id, prenom, nom')
+        .in('id', eleveIds);
+
+      if (errorEnfants) {
+        console.error('Erreur récupération des enfants:', errorEnfants.message);
+        setDebug(`❌ Erreur : ${errorEnfants.message}`);
       } else {
-        const enfantsTrouves = (liens || []).map((l) => l.eleves).filter(Boolean);
-        setEnfants(enfantsTrouves);
+        setEnfants(enfantsData || []);
         setDebug('✅ Enfants chargés');
       }
 
@@ -62,7 +81,7 @@ export default function HoraireParent() {
         .eq('eleve_id', selectedEnfantId);
 
       if (error) {
-        console.error('Erreur fetch séances:', error.message);
+        console.error('Erreur récupération séances:', error.message);
         setDebug(`❌ Erreur : ${error.message}`);
       } else {
         setSeances(seancesData || []);
