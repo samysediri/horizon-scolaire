@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Database } from '@/lib/database.types';
-import Link from 'next/link';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useUser } from '@supabase/auth-helpers-react';
 
-export default function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const supabase = createClientComponentClient<Database>();
+  const supabase = useSupabaseClient();
+  const user = useUser();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -15,32 +15,33 @@ export default function ParentDashboardLayout({ children }: { children: React.Re
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-white">
       {/* Barre de navigation */}
-      <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard/parent" className="text-blue-600 font-semibold hover:underline">
-            🏠 Accueil
-          </Link>
-          <Link href="/dashboard/parent/horaire" className="text-blue-600 font-semibold hover:underline">
-            🗓️ Horaire
-          </Link>
-          <Link href="/dashboard/parent/factures" className="text-blue-600 font-semibold hover:underline">
-            💵 Factures
-          </Link>
+      <header className="bg-[#0D1B2A] text-white shadow-md py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6">
+          <div className="flex items-center gap-6">
+            <a href="/dashboard/parent" className="hover:text-[#62B6CB] font-semibold">
+              🏠 Accueil
+            </a>
+            <a href="/dashboard/parent/horaire" className="hover:text-[#62B6CB] font-semibold">
+              📅 Horaire
+            </a>
+            <a href="/dashboard/parent/factures" className="hover:text-[#62B6CB] font-semibold">
+              💵 Factures
+            </a>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-[#E5C07B] text-[#0D1B2A] hover:bg-[#D4AF37] font-bold py-2 px-4 rounded-lg"
+          >
+            Déconnexion
+          </button>
         </div>
-
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Déconnexion
-        </button>
       </header>
 
-      {/* Contenu principal */}
-      <main className="flex-1 p-6">
-        {children}
+      {/* Contenu */}
+      <main className="flex-grow bg-[#F8FAFC] p-8">
+        <div className="max-w-7xl mx-auto">{children}</div>
       </main>
     </div>
   );
