@@ -16,10 +16,10 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 export default function HoraireParent() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [enfants, setEnfants] = useState([]);
+  const [enfants, setEnfants] = useState<any[]>([]);
   const [selectedEnfantId, setSelectedEnfantId] = useState('');
-  const [seances, setSeances] = useState([]);
-  const [popup, setPopup] = useState(null);
+  const [seances, setSeances] = useState<any[]>([]);
+  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState('Chargement en cours...');
 
@@ -29,15 +29,17 @@ export default function HoraireParent() {
 
       setDebug('🔄 Chargement de vos enfants...');
 
-      const { data, error } = await supabase
-        .from('eleves')
-        .select('id, prenom, nom')
+      const { data: liens, error } = await supabase
+        .from('eleves_parents')
+        .select('eleves(id, prenom, nom)')
         .eq('parent_id', user.id);
 
       if (error) {
+        console.error('Erreur fetch enfants:', error.message);
         setDebug(`❌ Erreur : ${error.message}`);
       } else {
-        setEnfants(data || []);
+        const enfantsTrouves = liens.map((l: any) => l.eleves).filter(Boolean);
+        setEnfants(enfantsTrouves);
         setDebug('✅ Enfants chargés');
       }
 
@@ -51,18 +53,19 @@ export default function HoraireParent() {
     const fetchSeances = async () => {
       if (!selectedEnfantId) return;
 
-      setLoading(true);
       setDebug('🔄 Chargement des séances...');
+      setLoading(true);
 
-      const { data, error } = await supabase
+      const { data: seancesData, error } = await supabase
         .from('seances')
         .select('*')
         .eq('eleve_id', selectedEnfantId);
 
       if (error) {
+        console.error('Erreur fetch séances:', error.message);
         setDebug(`❌ Erreur : ${error.message}`);
       } else {
-        setSeances(data || []);
+        setSeances(seancesData || []);
         setDebug('✅ Séances chargées');
       }
 
@@ -72,7 +75,7 @@ export default function HoraireParent() {
     fetchSeances();
   }, [selectedEnfantId, supabase]);
 
-  const handleSelectEvent = (event, e) => {
+  const handleSelectEvent = (event: any, e: any) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
   };
@@ -82,8 +85,6 @@ export default function HoraireParent() {
 
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
-
-  if (loading) return <p className="p-6 text-gray-500">{debug}</p>;
 
   return (
     <div className="p-6 relative">
@@ -104,7 +105,12 @@ export default function HoraireParent() {
         </select>
       </div>
 
-      {selectedEnfantId ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center h-40">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-blue-500 border-opacity-75"></div>
+          <p className="text-gray-500 mt-4">{debug}</p>
+        </div>
+      ) : selectedEnfantId ? (
         <div className="h-[30vh] bg-white p-4 rounded shadow">
           <Calendar
             localizer={localizer}
@@ -154,8 +160,6 @@ export default function HoraireParent() {
           </button>
         </div>
       )}
-
-      <div className="mt-4 text-sm text-gray-500">{debug}</div>
     </div>
   );
 }
