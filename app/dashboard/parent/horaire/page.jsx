@@ -16,10 +16,10 @@ const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales
 export default function HoraireParent() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const [enfants, setEnfants] = useState<any[]>([]);
+  const [enfants, setEnfants] = useState([]);
   const [selectedEnfantId, setSelectedEnfantId] = useState('');
-  const [seances, setSeances] = useState<any[]>([]);
-  const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
+  const [seances, setSeances] = useState([]);
+  const [popup, setPopup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [debug, setDebug] = useState('Chargement en cours...');
 
@@ -38,7 +38,7 @@ export default function HoraireParent() {
         console.error('Erreur fetch enfants:', error.message);
         setDebug(`❌ Erreur : ${error.message}`);
       } else {
-        const enfantsTrouves = liens.map((l: any) => l.eleves).filter(Boolean);
+        const enfantsTrouves = (liens || []).map((l) => l.eleves).filter(Boolean);
         setEnfants(enfantsTrouves);
         setDebug('✅ Enfants chargés');
       }
@@ -75,14 +75,13 @@ export default function HoraireParent() {
     fetchSeances();
   }, [selectedEnfantId, supabase]);
 
-  const handleSelectEvent = (event: any, e: any) => {
+  const handleSelectEvent = (event, e) => {
     e.preventDefault();
     setPopup({ x: e.clientX, y: e.clientY, seance: event });
   };
 
   const minTime = new Date();
   minTime.setHours(6, 0, 0, 0);
-
   const maxTime = new Date();
   maxTime.setHours(22, 0, 0, 0);
 
