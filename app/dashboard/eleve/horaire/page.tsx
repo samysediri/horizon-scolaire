@@ -51,39 +51,37 @@ export default function HoraireEleve() {
 
   const defaultMin = new Date();
   defaultMin.setHours(6, 0, 0, 0);
+
   const defaultMax = new Date();
   defaultMax.setHours(22, 0, 0, 0);
-
-  const allStarts = seances.map(s => new Date(s.debut));
-  const allEnds = seances.map(s => new Date(s.fin));
-
-  const minTime = allStarts.length ? new Date(Math.min(defaultMin.getTime(), ...allStarts.map(d => d.getTime()))) : defaultMin;
-  const maxTime = allEnds.length ? new Date(Math.max(defaultMax.getTime(), ...allEnds.map(d => d.getTime()))) : defaultMax;
 
   if (loading) return <p className="p-6 text-gray-500">{debug}</p>;
 
   return (
-    <div className="p-6 relative">
-      <h1 className="text-2xl font-bold mb-4">🗓️ Mon horaire</h1>
-      <div className="h-[30vh]">
-        <Calendar
-          localizer={localizer}
-          events={seances.map(s => ({
-            id: s.id,
-            title: s.sujet || 'Séance',
-            start: new Date(s.debut),
-            end: new Date(s.fin),
-            ...s
-          }))}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '100%', fontSize: '0.45rem' }}
-          defaultView={Views.WEEK}
-          min={minTime}
-          max={maxTime}
-          scrollToTime={minTime}
-          onSelectEvent={handleSelectEvent}
-        />
+    <div className="p-6 relative flex flex-col items-center min-h-screen bg-[#F8FAFC]">
+      <h1 className="text-3xl font-bold mb-6 text-[#0D1B2A]">🗓️ Mon horaire</h1>
+
+      <div className="w-full max-w-5xl bg-white p-6 rounded-lg shadow-md">
+        <div style={{ height: '75vh' }}>
+          <Calendar
+            localizer={localizer}
+            events={seances.map(s => ({
+              id: s.id,
+              title: s.sujet || 'Séance',
+              start: new Date(s.debut),
+              end: new Date(s.fin),
+              ...s
+            }))}
+            startAccessor="start"
+            endAccessor="end"
+            defaultView={Views.WEEK}
+            style={{ height: '100%', fontSize: '0.85rem' }}
+            min={defaultMin}
+            max={defaultMax}
+            scrollToTime={defaultMin}
+            onSelectEvent={handleSelectEvent}
+          />
+        </div>
       </div>
 
       {popup && (
@@ -91,25 +89,28 @@ export default function HoraireEleve() {
           className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
           style={{ top: popup.y + 10, left: popup.x + 10 }}
         >
-          <h3 className="text-md font-bold mb-1">Séance</h3>
-          <p className="text-sm mb-2">🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}
+          <h3 className="text-md font-bold mb-2 text-[#0D1B2A]">Séance</h3>
+          <p className="text-sm mb-4 text-gray-600">
+            🕒 {new Date(popup.seance.start).toLocaleTimeString()} à {new Date(popup.seance.end).toLocaleTimeString()}
           </p>
-          <button
-            onClick={() => window.open(popup.seance.lien_eleve, '_blank')}
-            className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-          >
-            Accéder
-          </button>
+          {popup.seance.lien_eleve && (
+            <button
+              onClick={() => window.open(popup.seance.lien_eleve, '_blank')}
+              className="bg-[#62B6CB] text-white px-3 py-1 rounded mr-2 hover:bg-[#539eb1]"
+            >
+              Accéder
+            </button>
+          )}
           <button
             onClick={() => setPopup(null)}
-            className="bg-gray-400 text-white px-3 py-1 rounded"
+            className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
           >
             Fermer
           </button>
         </div>
       )}
 
-      <div className="mt-4 text-sm text-gray-500">{debug}</div>
+      <div className="mt-6 text-sm text-gray-500">{debug}</div>
     </div>
   );
 }
