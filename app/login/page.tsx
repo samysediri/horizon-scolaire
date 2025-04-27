@@ -57,8 +57,16 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        
+        {/* LOGO */}
+        <div className="flex justify-center mb-6">
+          <img src="/logo.jpg" alt="Logo Horizon Scolaire" className="h-20 object-contain" />
+        </div>
+
+        {/* TITRE */}
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Connexion</h1>
 
+        {/* CHAMPS */}
         <input
           className="w-full mb-3 p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           type="email"
@@ -77,6 +85,7 @@ export default function LoginPage() {
           autoComplete="current-password"
         />
 
+        {/* BOUTON */}
         <button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded"
           onClick={handleLogin}
@@ -84,6 +93,7 @@ export default function LoginPage() {
           Se connecter
         </button>
 
+        {/* MOT DE PASSE OUBLIÉ */}
         <div className="mt-4 text-center">
           <button
             onClick={() => router.push('/reset-password-request')}
@@ -93,6 +103,7 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {/* MESSAGE D'ERREUR */}
         {error && <p className="text-red-600 mt-4 text-sm text-center">{error}</p>}
       </div>
     </div>
