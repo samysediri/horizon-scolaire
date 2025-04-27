@@ -1,83 +1,59 @@
 'use client';
 
-import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useEffect, useState } from 'react';
+import { useUser } from '@supabase/auth-helpers-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function DashboardEleve() {
+export default function EleveDashboard() {
   const user = useUser();
-  const supabase = useSupabaseClient();
-  const router = useRouter();
-  const [eleve, setEleve] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [debug, setDebug] = useState('Chargement...');
+  const [ready, setReady] = useState(false);
+  const [prenom, setPrenom] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setDebug('🔄 Vérification utilisateur...');
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (typeof window !== 'undefined') {
+      setReady(true);
+    }
+  }, []);
 
-      if (userError || !user) {
-        setDebug(`❌ Utilisateur non connecté : ${userError?.message || ''}`);
-        router.push('/login');
-        return;
-      }
+  useEffect(() => {
+    if (user) {
+      // On prend le prénom à partir des métadonnées si disponible
+      const metaPrenom = user.user_metadata?.prenom || '';
+      setPrenom(metaPrenom);
+    }
+  }, [user]);
 
-      setDebug(`✅ Utilisateur ID : ${user.id}`);
-
-      const { data: profil, error: profilError } = await supabase
-        .from('eleves')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profilError) {
-        setDebug(`❌ Erreur chargement élève : ${profilError.message}`);
-        return;
-      }
-
-      if (!profil) {
-        setDebug(`❌ Aucun élève trouvé pour l'ID : ${user.id}`);
-        return;
-      }
-
-      setEleve(profil);
-      setDebug('🎉 Élève chargé');
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [supabase, router]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
-
-  if (loading) return <p className="p-6 text-gray-500">{debug}</p>;
-  if (!eleve) return <p className="p-6 text-red-500">{debug}</p>;
+  if (!ready) return null;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Bienvenue {eleve.prenom} {eleve.nom}</h1>
-      <p className="mb-2">📧 {eleve.email}</p>
-      <p className="mb-2">🎯 Lien Lessonspace : <a href={eleve.lien_lessonspace} className="text-blue-600 underline">{eleve.lien_lessonspace}</a></p>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-4">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-xl space-y-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Bienvenue{prenom ? `, ${prenom}` : ''} !
+            </h1>
+            <p className="text-gray-500 text-sm">Tableau de bord Élève</p>
+          </div>
+        </div>
 
-      <div className="mt-6">
-        <Link href="/dashboard/eleve/horaire" className="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
-          🗓️ Voir mon horaire
-        </Link>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            href="/dashboard/eleve/horaire"
+            className="bg-[#62B6CB] hover:bg-[#539eb1] text-white py-6 px-4 rounded-lg flex flex-col justify-center items-center text-center shadow"
+          >
+            🗓️
+            <span className="mt-2 font-semibold">Voir mon horaire</span>
+          </Link>
+          <Link
+            href="/dashboard/eleve/cours"
+            className="bg-[#5390D9] hover:bg-[#4479b3] text-white py-6 px-4 rounded-lg flex flex-col justify-center items-center text-center shadow"
+          >
+            📚
+            <span className="mt-2 font-semibold">Voir mes cours</span>
+          </Link>
+        </div>
       </div>
-
-      <button
-        onClick={handleLogout}
-        className="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-      >
-        Se déconnecter
-      </button>
-
-      <div className="mt-4 text-sm text-gray-500">✅ {debug}</div>
     </div>
   );
 }
