@@ -28,9 +28,6 @@ export default function TuteurLayout({ children }: { children: React.ReactNode }
             <Link href="/dashboard/tuteur/horaire" className="hover:text-[#62B6CB] transition-colors">
               🗓️ Mon horaire
             </Link>
-            <Link href="/dashboard/tuteur/heures" className="hover:text-[#62B6CB] transition-colors">
-              ⏱️ Heures complétées
-            </Link>
           </div>
 
           <button
