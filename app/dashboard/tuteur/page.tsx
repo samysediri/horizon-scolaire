@@ -3,14 +3,11 @@
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function TuteurDashboard() {
   const user = useUser();
   const supabase = useSupabaseClient();
-  const router = useRouter();
   const [ready, setReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [salaire, setSalaire] = useState<number | null>(null);
   const [heuresTotales, setHeuresTotales] = useState<number | null>(null);
   const [nomComplet, setNomComplet] = useState<string | null>(null);
@@ -22,12 +19,6 @@ export default function TuteurDashboard() {
   }, []);
 
   useEffect(() => {
-    if (user?.user_metadata?.role === 'admin') {
-      setIsAdmin(true);
-    }
-  }, [user]);
-
-  useEffect(() => {
     const fetchInfosTuteur = async () => {
       if (!user?.id) return;
 
@@ -35,17 +26,10 @@ export default function TuteurDashboard() {
       const debutMois = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const finMois = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
 
-      const { data: seancesMois } = await supabase
+      // Récupère toutes les séances complétées du tuteur
+      const { data: seances } = await supabase
         .from('seances')
-        .select('duree_reelle, completee')
-        .eq('tuteur_id', user.id)
-        .eq('completee', true)
-        .gte('date', debutMois)
-        .lte('date', finMois);
-
-      const { data: seancesTotales } = await supabase
-        .from('seances')
-        .select('duree_reelle')
+        .select('duree_reelle, debut, completee')
         .eq('tuteur_id', user.id)
         .eq('completee', true);
 
@@ -55,10 +39,16 @@ export default function TuteurDashboard() {
         .eq('id', user.id)
         .single();
 
-      if (!tuteur) return;
+      if (!seances || !tuteur) return;
 
-      const totalMinutesMois = seancesMois?.reduce((acc, s) => acc + (s.duree_reelle || 0), 0) || 0;
-      const totalMinutesTotales = seancesTotales?.reduce((acc, s) => acc + (s.duree_reelle || 0), 0) || 0;
+      // Filtrer celles du mois en cours
+      const seancesMois = seances.filter(s => {
+        const dateDebut = new Date(s.debut);
+        return dateDebut >= new Date(debutMois) && dateDebut <= new Date(finMois);
+      });
+
+      const totalMinutesMois = seancesMois.reduce((acc, s) => acc + (s.duree_reelle || 0), 0);
+      const totalMinutesTotales = seances.reduce((acc, s) => acc + (s.duree_reelle || 0), 0);
 
       setSalaire((totalMinutesMois / 60) * tuteur.taux_horaire);
       setHeuresTotales(totalMinutesTotales / 60);
