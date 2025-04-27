@@ -21,6 +21,8 @@ export default function HoraireEleve() {
   const [debug, setDebug] = useState('Chargement des séances...');
   const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
 
+  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
   useEffect(() => {
     const fetchSeances = async () => {
       if (!user) return;
@@ -44,9 +46,17 @@ export default function HoraireEleve() {
     fetchSeances();
   }, [user, supabase]);
 
-  const handleSelectEvent = (event: any, e: any) => {
-    e.preventDefault();
-    setPopup({ x: e.clientX, y: e.clientY, seance: event });
+  // Capturer la position de la souris en continu
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setCursorPosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  const handleSelectEvent = (event: any) => {
+    setPopup({ x: cursorPosition.x, y: cursorPosition.y, seance: event });
   };
 
   const defaultMin = new Date();
