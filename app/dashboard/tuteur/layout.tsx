@@ -14,23 +14,40 @@ export default function TuteurLayout({ children }: { children: React.ReactNode }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow p-4 flex justify-between items-center">
-        <div className="flex gap-6 text-sm font-medium text-gray-700">
-          <Link href="/dashboard/tuteur" className="hover:text-blue-600">🏠 Accueil</Link>
-          <Link href="/dashboard/tuteur/eleves" className="hover:text-blue-600">👩‍🎓 Mes élèves</Link>
-          <Link href="/dashboard/tuteur/horaire" className="hover:text-blue-600">🗓️ Mon horaire</Link>
-          <Link href="/dashboard/tuteur/heures" className="hover:text-blue-600">⏱️ Heures complétées</Link>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded"
-        >
-          Déconnexion
-        </button>
-      </nav>
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+      {/* Barre de navigation */}
+      <header className="bg-[#0D1B2A] text-white shadow-md py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-6">
+          <div className="flex gap-6 text-sm font-semibold">
+            <Link href="/dashboard/tuteur" className="hover:text-[#62B6CB] transition-colors">
+              🏠 Accueil
+            </Link>
+            <Link href="/dashboard/tuteur/eleves" className="hover:text-[#62B6CB] transition-colors">
+              👩‍🎓 Mes élèves
+            </Link>
+            <Link href="/dashboard/tuteur/horaire" className="hover:text-[#62B6CB] transition-colors">
+              🗓️ Mon horaire
+            </Link>
+            <Link href="/dashboard/tuteur/heures" className="hover:text-[#62B6CB] transition-colors">
+              ⏱️ Heures complétées
+            </Link>
+          </div>
 
-      <main className="p-6">{children}</main>
+          <button
+            onClick={handleLogout}
+            className="bg-[#E5C07B] hover:bg-[#D4AF37] text-[#0D1B2A] font-bold py-2 px-4 rounded-lg transition"
+          >
+            Déconnexion
+          </button>
+        </div>
+      </header>
+
+      {/* Contenu principal */}
+      <main className="flex-grow p-8">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
