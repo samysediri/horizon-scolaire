@@ -21,8 +21,6 @@ export default function HoraireEleve() {
   const [debug, setDebug] = useState('Chargement des séances...');
   const [popup, setPopup] = useState<{ x: number; y: number; seance: any } | null>(null);
 
-  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-
   useEffect(() => {
     const fetchSeances = async () => {
       if (!user) return;
@@ -46,17 +44,19 @@ export default function HoraireEleve() {
     fetchSeances();
   }, [user, supabase]);
 
-  // Capturer la position de la souris en continu
+  const [cursor, setCursor] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: MouseEvent) => {
+    setCursor({ x: e.clientX, y: e.clientY });
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-    };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   const handleSelectEvent = (event: any) => {
-    setPopup({ x: cursorPosition.x, y: cursorPosition.y, seance: event });
+    setPopup({ x: cursor.x, y: cursor.y, seance: event });
   };
 
   const defaultMin = new Date();
@@ -84,8 +84,8 @@ export default function HoraireEleve() {
             }))}
             startAccessor="start"
             endAccessor="end"
-            defaultView={Views.WEEK}
             style={{ height: '100%', fontSize: '0.85rem' }}
+            defaultView={Views.WEEK}
             min={defaultMin}
             max={defaultMax}
             scrollToTime={defaultMin}
@@ -96,7 +96,7 @@ export default function HoraireEleve() {
 
       {popup && (
         <div
-          className="absolute bg-white border shadow-xl rounded-lg p-4 z-50"
+          className="fixed bg-white border shadow-xl rounded-lg p-4 z-50"
           style={{ top: popup.y + 10, left: popup.x + 10 }}
         >
           <h3 className="text-md font-bold mb-2 text-[#0D1B2A]">Séance</h3>
